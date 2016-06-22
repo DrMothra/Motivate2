@@ -1,0 +1,28 @@
+/* Framework styles */
+
+#WebGL-output {
+    /* set margin to 0 and overflow to hidden, to go fullscreen */
+    margin: 0;
+    overflow: hidden;
+}
+.noDisplay {
+    display: none;
+}
+/* Floating elements */
+.displayInfo {
+    position: absolute;
+    color: #7fa5ff;
+    font-size: 1.3vw;
+}
+#play {
+    top: 1%;
+    left: 1%;
+}
+#notSupported {
+    background: darkgrey;
+    border-radius: 15px;
+    color: black;
+    padding: 2%;
+    top: 25%;
+    left: 30%;
+}
