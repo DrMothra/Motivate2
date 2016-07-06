@@ -43,7 +43,7 @@ BaseApp.prototype.createRenderer = function() {
         // do IE-specific things
         width = window.innerWidth;
     }
-    this.renderer.setSize(width, window.innerHeight*0.99);
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.container.appendChild( this.renderer.domElement );
     var _this = this;
 
@@ -156,7 +156,7 @@ BaseApp.prototype.createScene = function() {
 BaseApp.prototype.createCamera = function() {
 
     this.camera = new THREE.PerspectiveCamera(45, this.container.clientWidth / window.innerHeight, 0.1, 5000 );
-    this.camera.position.set(0, 0, 70 );
+    this.camera.position.set(0, 0, 50 );
 
     console.log('dom =', this.renderer.domElement);
 };

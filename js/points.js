@@ -42,13 +42,31 @@ Motivate.prototype.createScene = function() {
     }
 
     this.facialFeatures = [
-        { feature: "topLip", point: 51, vertices: [1659, 14, 17, 1658, 13, 16, 1657, 12, 15, 1656, 1, 11] }
+        { feature: "topLip", point: 51, vertices: [1659, 14, 17, 1658, 13, 16, 1657, 12, 15, 1656, 1, 11] },
+        { feature: "topLipRight1", point: 52, vertices: []},
+        { feature: "topLipRight2", point: 53, vertices: []},
+        { feature: "topLipRight3", point: 54, vertices: []},
+        { feature: "topLipLeft1", point: 50, vertices: []},
+        { feature: "topLipLeft2", point: 49, vertices: []},
+        { feature: "topLipLeft3", point: 48, vertices: []},
+        { feature: "bottomLip", point: 57, vertices: []},
+        { feature: "bottomLipRight1", point: 56, vertices: []},
+        { feature: "bottomLipRight2", point: 55, vertices: []},
+        { feature: "bottomLipLeft1", point: 58, vertices: []},
+        { feature: "bottomLipLeft2", point: 59, vertices: []},
+        { feature: "MouthTopRight", point: 62, vertices: []},
+        { feature: "MouthTop", point: 61, vertices: []},
+        { feature: "MouthTopLeft", point: 60, vertices: []},
+        { feature: "MouthBottom", point: 64, vertices: []},
+        { feature: "MouthBottomRight", point: 63, vertices: []},
+        { feature: "MouthBottomLeft", point: 65, vertices: []}
     ];
 
     //Create points
     this.currentFrame = 0;
-    //this.renderFrame(0);
+    this.renderFrame(0);
 
+    /*
     this.loader = new THREE.JSONLoader();
     var _this = this, mesh, material;
     this.loader.load("models/maleHead.js", function(geom, mat) {
@@ -58,6 +76,7 @@ Motivate.prototype.createScene = function() {
         _this.scene.add(mesh);
         _this.headMesh = mesh;
     });
+    */
 };
 
 Motivate.prototype.renderFrame = function(frame) {
@@ -76,7 +95,7 @@ Motivate.prototype.renderFrame = function(frame) {
     this.scene.add(pointGroup);
     var frameData = this.frames[frame];
     for(var i=0; i<frameData.length; ++i) {
-        sphere = new THREE.Mesh(sphereGeom, i===64 ? sphereMatWhite : sphereMat);
+        sphere = new THREE.Mesh(sphereGeom, i===63 ? sphereMatWhite : sphereMat);
         pointGroup.add(sphere);
         sphere.position.set(frameData[point++], frameData[point++], frameData[point++]);
     }
@@ -88,24 +107,23 @@ Motivate.prototype.renderFrame = function(frame) {
 Motivate.prototype.renderNextFrame = function() {
     var next = this.currentFrame + 1;
     if(next >= this.numFrames) return;
-    //this.renderFrame(next);
+    this.renderFrame(next);
     this.currentFrame = next;
-    
+
+    /*
     var feature = this.facialFeatures[0];
 
     var offset = feature.point*3, previous = next -1;
     this.deltaVector.x = this.frames[next][offset] - this.frames[previous][offset];
     this.deltaVector.z = this.frames[next][offset+1] - this.frames[previous][offset+1];
-    this.deltaVector.y = this.frames[next][offset+2] - this.frames[previous][offset+2];
-    this.deltaVector.multiplyScalar(1);
-    //DEBUG
-    console.log("Delta = ", this.deltaVector);
-    //this.deltaVector.set(0,0,0.5);
+    this.deltaVector.y = (this.frames[next][offset+2] - this.frames[previous][offset+2]) * -1;
+    this.deltaVector.multiplyScalar(0.01);
 
     for(var i=0; i<feature.vertices.length; ++i) {
         this.headMesh.geometry.vertices[feature.vertices[i]].add(this.deltaVector);
     }
     this.headMesh.geometry.verticesNeedUpdate = true;
+    */
 };
 
 Motivate.prototype.update = function() {
@@ -114,9 +132,9 @@ Motivate.prototype.update = function() {
     this.elapsedTime += delta;
     if(this.elapsedTime >= FRAME_TIME) {
         this.elapsedTime = 0;
-        if(this.headMesh) {
+        //if(this.headMesh) {
             this.renderNextFrame();
-        }
+        //}
     }
     BaseApp.prototype.update.call(this);
 };
