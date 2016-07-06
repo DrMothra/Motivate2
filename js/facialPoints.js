@@ -42,16 +42,14 @@ Motivate.prototype.createScene = function() {
     }
 
     this.facialFeatures = [
-        { feature: "topLip", point: 51, vertices: [1659, 14, 17, 1658, 13, 16, 1657, 12, 15, 1656, 1, 11, 1718, 63,  107, 1719, 64, 107,
-            1720, 65, 108] },
-        { feature: "topLipRight1", point: 52, vertices: [281, 266, 278, 279, 277, 280, 60, 58, 61, 59, 45, 44, 42]},
-        { feature: "topLipRight2", point: 53, vertices: [248, 1121, 264, 246, 608, 258, 57, 56, 55, 52, 51, 43, 50]},
-        { feature: "topLipRight3", point: 54, vertices: [245, 253, 257, 254, 54, 53, 49, 47, 48, 46, 22]},
-        { feature: "topLipLeft1", point: 50, vertices: [1858, 1873, 1871, 1870, 1872, 1869, 1700, 1702, 1701, 1703, 1686, 1687, 1684]},
-        { feature: "topLipLeft2", point: 49, vertices: [1840, 2704, 1856, 1838, 2200, 1850, 1699, 1698, 1697, 1694, 1693, 1685, 1692]},
-        { feature: "topLipLeft3", point: 48, vertices: [1837, 1845, 1849, 1846, 1696, 1695, 1691, 1689, 1690, 1688, 1664]},
-        { feature: "bottomLip", point: 57, vertices: [1652, 3, 5, 1651, 2, 4, 1653, 6, 7, 1655, 1, 9, 1654, 0, 8]}
-        /*
+        { feature: "topLip", point: 51, vertices: [1659, 14, 17, 1658, 13, 16, 1657, 12, 15, 1656, 1, 11] },
+        { feature: "topLipRight1", point: 52, vertices: []},
+        { feature: "topLipRight2", point: 53, vertices: []},
+        { feature: "topLipRight3", point: 54, vertices: []},
+        { feature: "topLipLeft1", point: 50, vertices: []},
+        { feature: "topLipLeft2", point: 49, vertices: []},
+        { feature: "topLipLeft3", point: 48, vertices: []},
+        { feature: "bottomLip", point: 57, vertices: []},
         { feature: "bottomLipRight1", point: 56, vertices: []},
         { feature: "bottomLipRight2", point: 55, vertices: []},
         { feature: "bottomLipLeft1", point: 58, vertices: []},
@@ -62,63 +60,70 @@ Motivate.prototype.createScene = function() {
         { feature: "MouthBottom", point: 64, vertices: []},
         { feature: "MouthBottomRight", point: 63, vertices: []},
         { feature: "MouthBottomLeft", point: 65, vertices: []}
-        */
     ];
 
     //Create points
     this.currentFrame = 0;
+    this.renderFrame(0);
 
+    /*
     this.loader = new THREE.JSONLoader();
     var _this = this, mesh, material;
     this.loader.load("models/maleHead.js", function(geom, mat) {
         material = new THREE.MeshLambertMaterial({color:0x696969, wireframe:false});
         mesh = new THREE.Mesh(geom, material);
-        _this.origGeom = geom.clone();
         mesh.rotation.x = Math.PI/2;
         _this.scene.add(mesh);
         _this.headMesh = mesh;
     });
+    */
+};
+
+Motivate.prototype.renderFrame = function(frame) {
+    //Remove current frame
+    var current = this.scene.getObjectByName('pointGroup'+this.currentFrame);
+    if(current) {
+        this.scene.remove(current);
+    }
+    var sphereGeom = new THREE.SphereBufferGeometry(1, 16, 16);
+    var sphereMat = new THREE.MeshLambertMaterial( {color:0x0000ff});
+    var sphereMatWhite = new THREE.MeshLambertMaterial( {color:0xffffff});
+    var sphere, point=0;
+
+    var pointGroup = new THREE.Object3D();
+    pointGroup.name = 'pointGroup'+frame;
+    this.scene.add(pointGroup);
+    var frameData = this.frames[frame];
+    for(var i=0; i<frameData.length; ++i) {
+        sphere = new THREE.Mesh(sphereGeom, i===63 ? sphereMatWhite : sphereMat);
+        pointGroup.add(sphere);
+        sphere.position.set(frameData[point++], frameData[point++], frameData[point++]);
+    }
+    pointGroup.position.set(-300, 175, 0);
+    pointGroup.rotation.z = Math.PI;
+    pointGroup.rotation.y = Math.PI;
 };
 
 Motivate.prototype.renderNextFrame = function() {
     var next = this.currentFrame + 1;
     if(next >= this.numFrames) return;
+    this.renderFrame(next);
     this.currentFrame = next;
 
-    var feature, offset, previous, i, j;
-    for(i=0; i<this.facialFeatures.length; ++i) {
-        feature = this.facialFeatures[i];
+    /*
+    var feature = this.facialFeatures[0];
 
-        offset = feature.point*3;
-        previous = next -1;
-        this.deltaVector.x = this.frames[next][offset] - this.frames[previous][offset];
-        this.deltaVector.z = this.frames[next][offset+1] - this.frames[previous][offset+1];
-        this.deltaVector.y = (this.frames[next][offset+2] - this.frames[previous][offset+2]) * -1;
-        this.deltaVector.multiplyScalar(this.guiControls.Scale);
+    var offset = feature.point*3, previous = next -1;
+    this.deltaVector.x = this.frames[next][offset] - this.frames[previous][offset];
+    this.deltaVector.z = this.frames[next][offset+1] - this.frames[previous][offset+1];
+    this.deltaVector.y = (this.frames[next][offset+2] - this.frames[previous][offset+2]) * -1;
+    this.deltaVector.multiplyScalar(0.01);
 
-        for(j=0; j<feature.vertices.length; ++j) {
-            this.headMesh.geometry.vertices[feature.vertices[j]].add(this.deltaVector);
-        }
+    for(var i=0; i<feature.vertices.length; ++i) {
+        this.headMesh.geometry.vertices[feature.vertices[i]].add(this.deltaVector);
     }
-
     this.headMesh.geometry.verticesNeedUpdate = true;
-};
-
-Motivate.prototype.resetFrames = function() {
-    this.currentFrame = 0;
-    this.headMesh.geometry = this.origGeom.clone();
-};
-
-Motivate.prototype.createGUI = function() {
-    var _this = this;
-    this.guiControls = new function() {
-        this.Scale = 0.05;
-    };
-
-    //Create GUI
-    var gui = new dat.GUI();
-    var scale = gui.add(this.guiControls, 'Scale', 0, 1).step(0.01);
-    scale.listen();
+    */
 };
 
 Motivate.prototype.update = function() {
@@ -127,9 +132,9 @@ Motivate.prototype.update = function() {
     this.elapsedTime += delta;
     if(this.elapsedTime >= FRAME_TIME) {
         this.elapsedTime = 0;
-        if(this.headMesh) {
+        //if(this.headMesh) {
             this.renderNextFrame();
-        }
+        //}
     }
     BaseApp.prototype.update.call(this);
 };
@@ -139,11 +144,11 @@ $(document).ready(function() {
     var container = document.getElementById("WebGL-output");
     var app = new Motivate();
     app.init(container);
-    app.createGUI();
+    //app.createGUI();
     app.createScene();
 
     $('#control').on("click", function() {
-        app.resetFrames();
+        app.renderNextFrame();
     });
 
     app.run();
