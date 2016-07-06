@@ -139,7 +139,7 @@ BaseApp.prototype.createScene = function() {
 
     this.pointLight = new THREE.PointLight(0xffffff);
     var lightZ = 100;
-    this.pointLight.position.set(0,0,lightZ);
+    this.pointLight.position.set(100,100,lightZ);
     this.pointLight.name = 'PointLight';
     this.scene.add(this.pointLight);
 
@@ -156,7 +156,7 @@ BaseApp.prototype.createScene = function() {
 BaseApp.prototype.createCamera = function() {
 
     this.camera = new THREE.PerspectiveCamera(45, this.container.clientWidth / window.innerHeight, 0.1, 5000 );
-    this.camera.position.set(0, 0, 237 );
+    this.camera.position.set(0, 0, 70 );
 
     console.log('dom =', this.renderer.domElement);
 };
