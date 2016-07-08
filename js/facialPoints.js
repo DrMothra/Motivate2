@@ -94,9 +94,13 @@ Motivate.prototype.renderFrame = function(frame) {
     pointGroup.name = 'pointGroup'+frame;
     this.scene.add(pointGroup);
     var frameData = this.frames[frame];
-    for(var i=0; i<frameData.length; ++i) {
-        sphere = new THREE.Mesh(sphereGeom, i===63 ? sphereMatWhite : sphereMat);
+    var numSpheres = frameData.length/3;
+    for(var i=0; i<numSpheres; ++i) {
+        sphere = new THREE.Mesh(sphereGeom, i===51 ? sphereMatWhite : sphereMat);
         pointGroup.add(sphere);
+        if(i===51) {
+            console.log("Y = ", frameData[point + 1]);
+        }
         sphere.position.set(frameData[point++], frameData[point++], frameData[point++]);
     }
     pointGroup.position.set(-300, 175, 0);
@@ -126,6 +130,12 @@ Motivate.prototype.renderNextFrame = function() {
     */
 };
 
+Motivate.prototype.resetFrames = function() {
+    var next = 0;
+    this.renderFrame(next);
+    this.currentFrame = 0;
+};
+
 Motivate.prototype.update = function() {
     //Perform any updates
     var delta = this.clock.getDelta();
@@ -148,7 +158,7 @@ $(document).ready(function() {
     app.createScene();
 
     $('#control').on("click", function() {
-        app.renderNextFrame();
+        app.resetFrames();
     });
 
     app.run();
