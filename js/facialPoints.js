@@ -96,19 +96,23 @@ Motivate.prototype.renderFrame = function(frame) {
     var frameData = this.frames[frame];
     var numSpheres = frameData.length/3;
     for(var i=0; i<numSpheres; ++i) {
-        sphere = new THREE.Mesh(sphereGeom, i===51 ? sphereMatWhite : sphereMat);
+        sphere = new THREE.Mesh(sphereGeom, i===65 ? sphereMatWhite : sphereMat);
         pointGroup.add(sphere);
-        if(i===51) {
-            console.log("Y = ", frameData[point + 1]);
+        if(i===37) {
+            console.log("X = ", frameData[point], " Y = ", frameData[point + 1], " Z = ", frameData[point+2]);
         }
+
         sphere.position.set(frameData[point++], frameData[point++], frameData[point++]);
+
     }
     pointGroup.position.set(-300, 175, 0);
-    pointGroup.rotation.z = Math.PI;
-    pointGroup.rotation.y = Math.PI;
+    pointGroup.rotation.x = Math.PI;
+    //pointGroup.rotation.z = Math.PI;
+    //pointGroup.rotation.y = Math.PI;
 };
 
 Motivate.prototype.renderNextFrame = function() {
+
     var next = this.currentFrame + 1;
     if(next >= this.numFrames) return;
     this.renderFrame(next);
