@@ -99,7 +99,7 @@ Motivate.prototype.createScene = function() {
     var _this = this;
     this.skinnedMesh = undefined;
     this.mixer = undefined;
-    this.loader.load( './models/headBoneAnimationMesh1.js', function ( geometry, materials ) {
+    this.loader.load( './models/headBoneAnimationMesh3.js', function ( geometry, materials ) {
 
         for ( var k in materials ) {
 
