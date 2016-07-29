@@ -18,6 +18,14 @@
     top: 1%;
     left: 5%;
 }
+#control2 {
+    top: 5%;
+    left: 5%;
+}
+#info {
+    top: 1%;
+    right:10%;
+}
 #play {
     top: 1%;
     left: 1%;

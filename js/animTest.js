@@ -22,6 +22,9 @@ Motivate.prototype.createScene = function() {
 
     this.animating = false;
 
+    this.pointOne = new THREE.Vector3();
+    this.pointTwo = new THREE.Vector3();
+
     //Sort data
     var numFrames = 300, numPoints = 66, numDims = 3, point=0;
     this.numFrames = numFrames;
@@ -93,13 +96,13 @@ Motivate.prototype.createScene = function() {
         this.lastBonePos.push(new THREE.Vector3(frameData[point], frameData[point+1], frameData[point+2]));
     }
 
-    this.currentFrame = 1;
+    this.currentFrame = 0;
     this.loader = new THREE.JSONLoader();
 
     var _this = this;
     this.skinnedMesh = undefined;
     this.mixer = undefined;
-    this.loader.load( './models/headBoneAnimationMesh3.js', function ( geometry, materials ) {
+    this.loader.load( './models/headBoneAnimationMeshRotated.js', function ( geometry, materials ) {
 
         for ( var k in materials ) {
 
@@ -134,6 +137,7 @@ Motivate.prototype.update = function() {
 
     if(!this.animating) return;
 
+    /*
     this.elapsedTime += delta;
     if(this.elapsedTime >= FRAME_TIME) {
         this.elapsedTime = 0;
@@ -141,6 +145,7 @@ Motivate.prototype.update = function() {
         this.renderFrame();
         //}
     }
+    */
 
     /*
     if(this.mixer) {
@@ -157,16 +162,11 @@ Motivate.prototype.renderFrame = function() {
     var point, i, boneNumber;
     var frameData = this.frames[this.currentFrame];
 
+    /*
     for(i=0; i<this.facialFeatures.length; ++i) {
         point = this.facialFeatures[i].point * 3;
         boneNumber = this.facialFeatures[i].boneNum;
 
-        //DEBUG
-        /*
-        frameData[point] = 0;
-        frameData[point+1] = 0;
-        frameData[point+2] = 2 * this.currentFrame;
-        */
 
         this.deltaPos.x = frameData[point] - this.lastBonePos[i].x;
         this.deltaPos.y = (frameData[point+2] - this.lastBonePos[i].z) * -1;
@@ -178,12 +178,30 @@ Motivate.prototype.renderFrame = function() {
         this.lastBonePos[i].x = frameData[point];
         this.lastBonePos[i].y = frameData[point+1];
         this.lastBonePos[i].z = frameData[point+2];
-
-        //DEBUG
-        if(point === 37*3) {
-            console.log("Delta = ", this.deltaPos);
-        }
     }
+    */
+
+    //Rotation
+    $('#frame').html(this.currentFrame);
+    point = 16*3;
+
+    //About Z-axis
+    this.pointTwo.set(frameData[point], frameData[point+1], 0);
+    this.pointOne.set(frameData[0], frameData[1], 0);
+    var dist = this.pointTwo.distanceTo(this.pointOne);
+    var deltaY = frameData[point+1] - frameData[1];
+    var theta = Math.asin(deltaY/dist);
+    this.skinnedMesh.rotation.y = theta;
+    $('#rotZ').html(theta);
+
+    //About y-axis
+    this.pointTwo.set(frameData[point], 0, frameData[point+2]);
+    this.pointOne.set(frameData[0], 0, frameData[2]);
+    dist = this.pointTwo.distanceTo(this.pointOne);
+    var deltaZ = frameData[point+2] - frameData[2];
+    theta = Math.asin(deltaZ/dist);
+    this.skinnedMesh.rotation.z = -theta;
+    $('#rotY').html(theta);
 
     ++this.currentFrame;
 };
@@ -206,7 +224,7 @@ $(document).ready(function() {
     app.createScene();
 
     $('#control').on("click", function() {
-        app.resetFrames();
+        app.renderFrame();
     });
 
     app.run();
