@@ -18933,8 +18933,9 @@ Object.assign( THREE.JSONLoader.prototype, {
 					var z = ( influencesPerVertex > 2 ) ? json.skinWeights[ i + 2 ] : 0;
 					var w = ( influencesPerVertex > 3 ) ? json.skinWeights[ i + 3 ] : 0;
 
-					geometry.skinWeights.push( new THREE.Vector4( x, y, z, w ) );
-
+					//DEBUG - 2nd skin weight always zero
+					//geometry.skinWeights.push( new THREE.Vector4( x, y, z, w ) );
+					geometry.skinWeights.push( new THREE.Vector4( x, x, z, w ) );
 				}
 
 			}

@@ -20,7 +20,15 @@ Motivate.prototype.createScene = function() {
     //Create scene
     BaseApp.prototype.createScene.call(this);
 
+    this.playing = false;
     this.headMesh = undefined;
+
+    //DEBUG shapes
+    var geom = new THREE.BoxBufferGeometry(20, 10, 5);
+    var mat = new THREE.MeshLambertMaterial( {color: 0xff0000});
+    this.debugShape = new THREE.Mesh(geom, mat);
+    this.debugShape.rotation.x = -Math.PI/2;
+    //this.scene.add(this.debugShape);
 
     //Delta vectors
     this.deltaVector = new THREE.Vector3();
@@ -90,7 +98,8 @@ Motivate.prototype.renderFrame = function(frame) {
     var sphereGeom = new THREE.SphereBufferGeometry(1, 16, 16);
     var sphereMat = new THREE.MeshLambertMaterial( {color:0x0000ff});
     var sphereMatWhite = new THREE.MeshLambertMaterial( {color:0xffffff});
-    var sphere, point=0, displayPoint=16;
+    var sphere, point=0, xRotPoint = 28, yzRotPoint = 16;
+    var dist, deltaY, theta;
 
     var pointGroup = new THREE.Object3D();
     pointGroup.name = 'pointGroup'+frame;
@@ -98,21 +107,22 @@ Motivate.prototype.renderFrame = function(frame) {
     var frameData = this.frames[frame];
     var numSpheres = frameData.length/3;
     for(var i=0; i<numSpheres; ++i) {
-        sphere = new THREE.Mesh(sphereGeom, i===displayPoint ? sphereMatWhite : sphereMat);
+        sphere = new THREE.Mesh(sphereGeom, i===yzRotPoint ? sphereMatWhite : sphereMat);
         pointGroup.add(sphere);
-        if(i===displayPoint) {
+        if(i===yzRotPoint) {
             $('#frame').html(frame);
-            $('#point').html(displayPoint);
+            $('#point').html(yzRotPoint);
             $('#xPoint').html(frameData[point]);
-            $('#yPoint').html(frameData[point+1]);
-            $('#zPoint').html(frameData[point+2]);
+            $('#yPoint').html(frameData[point + 1]);
+            $('#zPoint').html(frameData[point + 2]);
 
             //Rotation
             this.pointTwo.set(frameData[point], frameData[point+1], 0);
             this.pointOne.set(frameData[0], frameData[1], 0);
-            var dist = this.pointTwo.distanceTo(this.pointOne);
-            var deltaY = frameData[point+1] - frameData[1];
-            var theta = Math.asin(deltaY/dist);
+            dist = this.pointTwo.distanceTo(this.pointOne);
+            deltaY = frameData[point+1] - frameData[1];
+            theta = Math.asin(deltaY/dist);
+            //this.debugShape.rotation.y = theta * 20;
             $('#rotZ').html(theta);
 
             this.pointTwo.set(frameData[point], 0, frameData[point+2]);
@@ -120,12 +130,20 @@ Motivate.prototype.renderFrame = function(frame) {
             dist = this.pointTwo.distanceTo(this.pointOne);
             var deltaZ = frameData[point+2] - frameData[2];
             theta = Math.asin(deltaZ/dist);
+            //DEBUG
+            //this.debugShape.rotation.z = theta*20;
             $('#rotY').html(theta);
+        }
 
+        if(i===xRotPoint) {
             this.pointTwo.set(0, frameData[point+1], frameData[point+2]);
             this.pointOne.set(0, frameData[1], frameData[2]);
             dist = this.pointTwo.distanceTo(this.pointOne);
+            deltaY = frameData[point+1] - frameData[1];
             theta = Math.asin(deltaY/dist);
+            //DEBUG
+            //this.debugShape.rotation.x = -Math.PI/2 + (theta*10);
+
             $('#rotX').html(theta);
         }
 
@@ -139,7 +157,7 @@ Motivate.prototype.renderFrame = function(frame) {
 Motivate.prototype.renderNextFrame = function() {
 
     var next = this.currentFrame + 1;
-    if(next >= this.numFrames) return;
+    if(next >= this.numFrames) next = 0;
     this.renderFrame(next);
     this.currentFrame = next;
 
@@ -159,24 +177,28 @@ Motivate.prototype.renderNextFrame = function() {
     */
 };
 
-Motivate.prototype.resetFrames = function() {
-    var next = 0;
-    this.renderFrame(next);
-    this.currentFrame = 0;
+Motivate.prototype.toggleFrames = function() {
+    this.playing = !this.playing;
+};
+
+Motivate.prototype.stepToNextFrame = function() {
+    if(this.playing) return;
+
+    this.renderNextFrame();
 };
 
 Motivate.prototype.update = function() {
     //Perform any updates
     var delta = this.clock.getDelta();
-    this.elapsedTime += delta;
-    /*
-    if(this.elapsedTime >= FRAME_TIME) {
-        this.elapsedTime = 0;
-        //if(this.headMesh) {
+
+    if(this.playing) {
+        this.elapsedTime += delta;
+        if(this.elapsedTime >= FRAME_TIME) {
+            this.elapsedTime = 0;
             this.renderNextFrame();
-        //}
+        }
     }
-    */
+
     BaseApp.prototype.update.call(this);
 };
 
@@ -189,11 +211,11 @@ $(document).ready(function() {
     app.createScene();
 
     $('#play').on("click", function() {
-        app.resetFrames();
+        app.toggleFrames();
     });
 
     $('#next').on("click", function() {
-        app.renderNextFrame();
+        app.stepToNextFrame();
     });
 
     app.run();
