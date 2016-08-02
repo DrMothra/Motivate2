@@ -3,6 +3,7 @@
  */
 
 var FRAME_TIME = 0.04;
+var X_AXIS=0, Y_AXIS=1, Z_AXIS=2;
 
 //Init this app from base
 function Motivate() {
@@ -30,13 +31,18 @@ Motivate.prototype.createScene = function() {
     this.debugShape.rotation.x = -Math.PI/2;
     //this.scene.add(this.debugShape);
 
+    //Neck point
+    geom = new THREE.SphereBufferGeometry(1, 16, 16);
+    this.neckPoint = new THREE.Mesh(geom, mat);
+    this.scene.add(this.neckPoint);
+
     //Delta vectors
     this.deltaVector = new THREE.Vector3();
     this.pointOne = new THREE.Vector3();
     this.pointTwo = new THREE.Vector3();
 
     //Sort data
-    var numFrames = 300, numPoints = 66, numDims = 3, point=0;
+    var numFrames = 331, numPoints = 66, numDims = 3, point=0;
     this.numFrames = numFrames;
     this.frames = [];
     var frame, i;
@@ -87,6 +93,52 @@ Motivate.prototype.createScene = function() {
         _this.headMesh = mesh;
     });
     */
+};
+
+Motivate.prototype.createGUI = function() {
+    var _this = this;
+    this.guiControls = new function() {
+        this.PosX = 0.01;
+        this.PosY = 0.01;
+        this.PosZ = 0.01;
+    };
+
+    //Create GUI
+    var gui = new dat.GUI();
+
+    var posx = gui.add(this.guiControls, 'PosX', -300, 300).step(1);
+    posx.onChange(function(value) {
+        _this.onPosChanged(X_AXIS, value);
+    });
+
+    var posy = gui.add(this.guiControls, 'PosY', -300, 300).step(1);
+    posy.onChange(function(value) {
+        _this.onPosChanged(Y_AXIS, value);
+    });
+
+    var posz = gui.add(this.guiControls, 'PosZ', -300, 300).step(1);
+    posz.onChange(function(value) {
+        _this.onPosChanged(Z_AXIS, value);
+    });
+};
+
+Motivate.prototype.onPosChanged = function(axis, value) {
+    switch (axis) {
+        case X_AXIS:
+            this.neckPoint.position.x = value;
+            break;
+
+        case Y_AXIS:
+            this.neckPoint.position.y = value;
+            break;
+
+        case Z_AXIS:
+            this.neckPoint.position.z = value;
+            break;
+
+        default:
+            break;
+    }
 };
 
 Motivate.prototype.renderFrame = function(frame) {
@@ -207,7 +259,7 @@ $(document).ready(function() {
     var container = document.getElementById("WebGL-output");
     var app = new Motivate();
     app.init(container);
-    //app.createGUI();
+    app.createGUI();
     app.createScene();
 
     $('#play').on("click", function() {

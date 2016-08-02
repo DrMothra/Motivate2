@@ -4,6 +4,7 @@
 
 var FRAME_TIME = 0.04;
 var INC = 1;
+var X_AXIS=0, Y_AXIS=1, Z_AXIS=2;
 
 //Init this app from base
 function Motivate() {
@@ -33,7 +34,7 @@ Motivate.prototype.createScene = function() {
     //this.scene.add(this.debugShape);
 
     //Sort data
-    var numFrames = 300, numPoints = 66, numDims = 3, point=0;
+    var numFrames = 331, numPoints = 66, numDims = 3, point=0;
     this.numFrames = numFrames;
     this.frames = [];
     var frame, i;
@@ -120,7 +121,7 @@ Motivate.prototype.createScene = function() {
     var _this = this;
     this.skinnedMesh = undefined;
     this.mixer = undefined;
-    this.loader.load( './models/headBoneAnimationMesh3.js', function ( geometry, materials ) {
+    this.loader.load( './models/headBoneAnimationMesh4.js', function ( geometry, materials ) {
 
         for ( var k in materials ) {
 
@@ -147,6 +148,52 @@ Motivate.prototype.createScene = function() {
         //_this.skinnedMesh.visible = false;
         console.log("Skinned = ", _this.skinnedMesh);
     });
+};
+
+Motivate.prototype.createGUI = function() {
+    var _this = this;
+    this.guiControls = new function() {
+        this.RotX = 0.01;
+        this.RotY = 0.01;
+        this.RotZ = 0.01;
+    };
+
+    //Create GUI
+    var gui = new dat.GUI();
+
+    var rotx = gui.add(this.guiControls, 'RotX', -3, 3).step(0.1);
+    rotx.onChange(function(value) {
+        _this.onRotChanged(X_AXIS, value);
+    });
+
+    var roty = gui.add(this.guiControls, 'RotY', -3, 3).step(0.1);
+    roty.onChange(function(value) {
+        _this.onRotChanged(Y_AXIS, value);
+    });
+
+    var rotz = gui.add(this.guiControls, 'RotZ', -3, 3).step(0.1);
+    rotz.onChange(function(value) {
+        _this.onRotChanged(Z_AXIS, value);
+    });
+};
+
+Motivate.prototype.onRotChanged = function(axis, value) {
+    switch(axis) {
+        case X_AXIS:
+            this.skinnedMesh.rotation.x = -Math.PI/2 - value;
+            break;
+
+        case Y_AXIS:
+            this.skinnedMesh.rotation.y = value;
+            break;
+
+        case Z_AXIS:
+            this.skinnedMesh.rotation.z = value;
+            break;
+
+        default:
+            break;
+    }
 };
 
 Motivate.prototype.update = function() {
@@ -181,6 +228,8 @@ Motivate.prototype.renderFrame = function() {
 
         this.deltaPos.x = frameData[point] - this.lastBonePos[i].x;
         this.deltaPos.y = (frameData[point+2] - this.lastBonePos[i].z) * -1;
+        //DEBUG
+        this.deltaPos.x = this.deltaPos.y = 0;
         this.deltaPos.z = frameData[point+1] - this.lastBonePos[i].y;
 
         this.deltaPos.multiplyScalar(0.05);
@@ -247,6 +296,7 @@ $(document).ready(function() {
     var app = new Motivate();
     app.init(container);
     app.createScene();
+    app.createGUI();
 
     $('#play').on("click", function() {
         app.toggleFrames();
