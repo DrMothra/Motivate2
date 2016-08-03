@@ -4,6 +4,7 @@
 
 var FRAME_TIME = 0.04;
 var X_AXIS=0, Y_AXIS=1, Z_AXIS=2;
+var NUM_LINES = 3;
 
 //Init this app from base
 function Motivate() {
@@ -30,6 +31,16 @@ Motivate.prototype.createScene = function() {
     this.debugShape = new THREE.Mesh(geom, mat);
     this.debugShape.rotation.x = -Math.PI/2;
     //this.scene.add(this.debugShape);
+
+    var lineMat = new THREE.LineBasicMaterial( {color: 0xff0000});
+    this.debugLines = [];
+    this.lineGeoms = [];
+    for(var i=0; i<NUM_LINES; ++i) {
+        this.lineGeoms.push(new THREE.Geometry());
+        this.lineGeoms[i].vertices.push(new THREE.Vector3(100, 0, 0),
+            new THREE.Vector3(0, 100, 0));
+        this.debugLines.push(new THREE.Line(this.lineGeoms[i], lineMat));
+    }
 
     //Neck point
     geom = new THREE.SphereBufferGeometry(1, 16, 16);
@@ -98,50 +109,15 @@ Motivate.prototype.createScene = function() {
 Motivate.prototype.createGUI = function() {
     var _this = this;
     this.guiControls = new function() {
-        this.PosX = 0.01;
-        this.PosY = 0.01;
-        this.PosZ = 0.01;
         this.Point = 61;
+        this.Lines = false;
     };
 
     //Create GUI
     var gui = new dat.GUI();
 
-    var posx = gui.add(this.guiControls, 'PosX', -300, 300).step(1);
-    posx.onChange(function(value) {
-        _this.onPosChanged(X_AXIS, value);
-    });
-
-    var posy = gui.add(this.guiControls, 'PosY', -300, 300).step(1);
-    posy.onChange(function(value) {
-        _this.onPosChanged(Y_AXIS, value);
-    });
-
-    var posz = gui.add(this.guiControls, 'PosZ', -300, 300).step(1);
-    posz.onChange(function(value) {
-        _this.onPosChanged(Z_AXIS, value);
-    });
-
-    var point = gui.add(this.guiControls, 'Point', 0, 65).step(1);
-};
-
-Motivate.prototype.onPosChanged = function(axis, value) {
-    switch (axis) {
-        case X_AXIS:
-            this.neckPoint.position.x = value;
-            break;
-
-        case Y_AXIS:
-            this.neckPoint.position.y = value;
-            break;
-
-        case Z_AXIS:
-            this.neckPoint.position.z = value;
-            break;
-
-        default:
-            break;
-    }
+    gui.add(this.guiControls, 'Point', 0, 65).step(1);
+    gui.add(this.guiControls, 'Lines');
 };
 
 Motivate.prototype.renderFrame = function(frame) {
@@ -206,10 +182,51 @@ Motivate.prototype.renderFrame = function(frame) {
             $('#yPoint').html(deltaY);
         }
         sphere.position.set(frameData[point++], frameData[point++], frameData[point++]);
-
     }
     pointGroup.position.set(-300, 175, 0);
     pointGroup.rotation.x = Math.PI;
+
+    if(this.guiControls.Lines) {
+        this.lineGeoms[0].vertices[0].x = frameData[0];
+        this.lineGeoms[0].vertices[0].y = frameData[1];
+        this.lineGeoms[0].vertices[0].z = frameData[2];
+        var linePoint = 16*3;
+        this.lineGeoms[0].vertices[1].x = frameData[linePoint];
+        this.lineGeoms[0].vertices[1].y = frameData[linePoint+1];
+        this.lineGeoms[0].vertices[1].z = frameData[linePoint+2];
+        this.lineGeoms[0].verticesNeedUpdate = true;
+
+        this.deltaVector.x = frameData[linePoint] - frameData[0];
+        this.deltaVector.y = frameData[linePoint+1] - frameData[1];
+        this.deltaVector.z = frameData[linePoint+2] - frameData[2];
+        this.deltaVector.multiplyScalar(0.5);
+        this.deltaVector.x += frameData[0];
+        this.deltaVector.y += frameData[1];
+        this.deltaVector.z += frameData[2];
+
+        linePoint = 28*3;
+        this.lineGeoms[1].vertices[0].x = frameData[linePoint];
+        this.lineGeoms[1].vertices[0].y = frameData[linePoint+1];
+        this.lineGeoms[1].vertices[0].z = frameData[linePoint+2];
+
+        this.lineGeoms[1].vertices[1].x = this.deltaVector.x;
+        this.lineGeoms[1].vertices[1].y = this.deltaVector.y;
+        this.lineGeoms[1].vertices[1].z = this.deltaVector.z;
+        this.lineGeoms[1].verticesNeedUpdate = true;
+
+        this.lineGeoms[2].vertices[0].x = this.deltaVector.x;
+        this.lineGeoms[2].vertices[0].y = this.deltaVector.y;
+        this.lineGeoms[2].vertices[0].z = this.deltaVector.z;
+
+        this.lineGeoms[2].vertices[1].x = this.deltaVector.x;
+        this.lineGeoms[2].vertices[1].y = this.deltaVector.y + 300;
+        this.lineGeoms[2].vertices[1].z = this.deltaVector.z;
+        this.lineGeoms[2].verticesNeedUpdate = true;
+
+        pointGroup.add(this.debugLines[0]);
+        pointGroup.add(this.debugLines[1]);
+        pointGroup.add(this.debugLines[2]);
+    }
 };
 
 Motivate.prototype.renderNextFrame = function() {

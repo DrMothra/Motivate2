@@ -94,14 +94,19 @@ Motivate.prototype.createScene = function() {
         { feature: "topRightEyelid2", point: 38, boneNum: 40}
         */
 
-        { feature: "topLipLeft1", point: 52, boneNum: 6},
-        { feature: "topLipLeft2", point: 53, boneNum: 7},
-        { feature: "topLipLeft3", point: 54, boneNum: 8},
-        { feature: "topLipMiddle", point: 51, boneNum: 9},
-        { feature: "topLipRight1", point: 50, boneNum: 10},
-        { feature: "topLipRight2", point: 49, boneNum: 11},
-        { feature: "topLipRight3", point: 48, boneNum: 12}
 
+        { feature: "bottomLipLeft1", point: 56, boneNum: 1, constraint: -1},
+        { feature: "bottomLipLeft2", point: 55, boneNum: 2, constraint: -1},
+        { feature: "bottomLipMiddle", point: 57, boneNum: 3, constraint: -1},
+        { feature: "bottomLipRight1", point: 58, boneNum: 4, constraint: -1},
+        { feature: "bottomLipRight2", point: 59, boneNum: 5, constraint: -1},
+        { feature: "topLipLeft1", point: 52, boneNum: 6, constraint: 1},
+        { feature: "topLipLeft2", point: 53, boneNum: 7, constraint: 1},
+        { feature: "topLipLeft3", point: 54, boneNum: 8, constraint: 1},
+        { feature: "topLipMiddle", point: 51, boneNum: 9, constraint: 1},
+        { feature: "topLipRight1", point: 50, boneNum: 10, constraint: 1},
+        { feature: "topLipRight2", point: 49, boneNum: 11, constraint: 1},
+        { feature: "topLipRight3", point: 48, boneNum: 12, constraint: 1}
     ];
 
     //DEBUG spheres
@@ -129,7 +134,7 @@ Motivate.prototype.createScene = function() {
     var _this = this;
     this.skinnedMesh = undefined;
     this.mixer = undefined;
-    this.loader.load( './models/headBoneAnimationMesh7.js', function ( geometry, materials ) {
+    this.loader.load( './models/headBoneAnimationMesh8.js', function ( geometry, materials ) {
 
         for ( var k in materials ) {
 
@@ -228,21 +233,28 @@ Motivate.prototype.renderFrame = function() {
     if(this.currentFrame >= this.numFrames) this.currentFrame = 1;
 
     $('#frame').html(this.currentFrame);
-    var point, i, boneNumber;
+    var point, i, boneNumber, test;
     var frameData = this.frames[this.currentFrame];
     var previousFrameData = this.frames[this.currentFrame-1];
 
     for(i=0; i<this.facialFeatures.length; ++i) {
         point = this.facialFeatures[i].point * 3;
         boneNumber = this.facialFeatures[i].boneNum;
-
+        test = this.facialFeatures[i].constraint;
 
         this.deltaPos.x = frameData[point] - previousFrameData[point];
         this.deltaPos.y = frameData[point+2] - previousFrameData[point+2];
         //DEBUG
         this.deltaPos.x = this.deltaPos.y = 0;
-        if(frameData[point+1] > this.startY[i]) frameData[point+1] = this.startY[i];
-        if(previousFrameData[point+1] > this.startY[i]) previousFrameData[point+1] = this.startY[i];
+
+        if(test === 1) {
+            if(frameData[point+1] > this.startY[i]) frameData[point+1] = this.startY[i];
+            if(previousFrameData[point+1] > this.startY[i]) previousFrameData[point+1] = this.startY[i];
+        }
+        if(test === -1) {
+            if(frameData[point+1] < this.startY[i]) frameData[point+1] = this.startY[i];
+            if(previousFrameData[point+1] < this.startY[i]) previousFrameData[point+1] = this.startY[i];
+        }
         this.deltaPos.z = (frameData[point+1] - previousFrameData[point+1]) * -1;
 
         $('#yPoint').html(this.deltaPos.z);
@@ -298,6 +310,7 @@ Motivate.prototype.renderFrame = function() {
 
 Motivate.prototype.toggleFrames = function() {
     this.playing = !this.playing;
+    $('#play').html(this.playing ? 'Pause' : 'Play');
 };
 
 Motivate.prototype.stepToNextFrame = function() {
