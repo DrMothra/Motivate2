@@ -101,6 +101,7 @@ Motivate.prototype.createGUI = function() {
         this.PosX = 0.01;
         this.PosY = 0.01;
         this.PosZ = 0.01;
+        this.Point = 61;
     };
 
     //Create GUI
@@ -120,6 +121,8 @@ Motivate.prototype.createGUI = function() {
     posz.onChange(function(value) {
         _this.onPosChanged(Z_AXIS, value);
     });
+
+    var point = gui.add(this.guiControls, 'Point', 0, 65).step(1);
 };
 
 Motivate.prototype.onPosChanged = function(axis, value) {
@@ -159,14 +162,11 @@ Motivate.prototype.renderFrame = function(frame) {
     var frameData = this.frames[frame];
     var numSpheres = frameData.length/3;
     for(var i=0; i<numSpheres; ++i) {
-        sphere = new THREE.Mesh(sphereGeom, i===yzRotPoint ? sphereMatWhite : sphereMat);
+        sphere = new THREE.Mesh(sphereGeom, i===this.guiControls.Point ? sphereMatWhite : sphereMat);
         pointGroup.add(sphere);
         if(i===yzRotPoint) {
             $('#frame').html(frame);
             $('#point').html(yzRotPoint);
-            $('#xPoint').html(frameData[point]);
-            $('#yPoint').html(frameData[point + 1]);
-            $('#zPoint').html(frameData[point + 2]);
 
             //Rotation
             this.pointTwo.set(frameData[point], frameData[point+1], 0);
@@ -199,6 +199,12 @@ Motivate.prototype.renderFrame = function(frame) {
             $('#rotX').html(theta);
         }
 
+        if(frame >0) {
+            var deltaPoint = this.guiControls.Point * 3;
+            var previousFrameData = this.frames[frame-1];
+            deltaY = frameData[deltaPoint+1] - previousFrameData[deltaPoint+1];
+            $('#yPoint').html(deltaY);
+        }
         sphere.position.set(frameData[point++], frameData[point++], frameData[point++]);
 
     }

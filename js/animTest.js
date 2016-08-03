@@ -50,6 +50,7 @@ Motivate.prototype.createScene = function() {
     }
 
     this.facialFeatures = [
+        /*
         { feature: "bottomLeftEyelid1", point: 45, boneNum: 1},
         { feature: "bottomLeftEyelid2", point: 46, boneNum: 2},
         { feature: "bottomLeftEyelid3", point: 47, boneNum: 3},
@@ -91,6 +92,12 @@ Motivate.prototype.createScene = function() {
         { feature: "topLipRight3", point: 48, boneNum: 38},
         { feature: "topRightEyelid1", point: 37, boneNum: 39},
         { feature: "topRightEyelid2", point: 38, boneNum: 40}
+        */
+
+        { feature: "innerTopLipLeft", point: 62, boneNum: 9},
+        { feature: "innerTopLipMiddle", point: 61, boneNum: 10},
+        { feature: "innerTopLipRight", point: 60, boneNum: 11}
+
     ];
 
     //DEBUG spheres
@@ -106,16 +113,13 @@ Motivate.prototype.createScene = function() {
 
     //Bone update positions
     this.deltaPos = new THREE.Vector3();
-    this.lastBonePos = [];
     var frameData = this.frames[0];
+    this.startY = [];
     for(i=0; i<this.facialFeatures.length; ++i) {
         point = this.facialFeatures[i].point * 3;
-        //DEBUG
-        //this.lastBonePos.push(new THREE.Vector3(0, 0, 0));
-        this.lastBonePos.push(new THREE.Vector3(frameData[point], frameData[point+1], frameData[point+2]));
+        this.startY[i] = frameData[point+1];
     }
-
-    this.currentFrame = 0;
+    this.currentFrame = 1;
     this.loader = new THREE.JSONLoader();
 
     var _this = this;
@@ -214,30 +218,30 @@ Motivate.prototype.update = function() {
 };
 
 Motivate.prototype.renderFrame = function() {
-    if(this.currentFrame >= this.numFrames) this.currentFrame = 0;
+    if(this.currentFrame >= this.numFrames) this.currentFrame = 1;
 
     $('#frame').html(this.currentFrame);
     var point, i, boneNumber;
     var frameData = this.frames[this.currentFrame];
-
+    var previousFrameData = this.frames[this.currentFrame-1];
 
     for(i=0; i<this.facialFeatures.length; ++i) {
         point = this.facialFeatures[i].point * 3;
         boneNumber = this.facialFeatures[i].boneNum;
 
 
-        this.deltaPos.x = frameData[point] - this.lastBonePos[i].x;
-        this.deltaPos.y = (frameData[point+2] - this.lastBonePos[i].z) * -1;
+        this.deltaPos.x = frameData[point] - previousFrameData[point];
+        this.deltaPos.y = frameData[point+2] - previousFrameData[point+2];
         //DEBUG
         this.deltaPos.x = this.deltaPos.y = 0;
-        this.deltaPos.z = frameData[point+1] - this.lastBonePos[i].y;
+        if(frameData[point+1] > this.startY[i]) frameData[point+1] = this.startY[i];
+        if(previousFrameData[point+1] > this.startY[i]) previousFrameData[point+1] = this.startY[i];
+        this.deltaPos.z = (frameData[point+1] - previousFrameData[point+1]) * -1;
+
+        $('#yPoint').html(this.deltaPos.z);
 
         this.deltaPos.multiplyScalar(0.05);
         this.skinnedMesh.skeleton.bones[boneNumber].position.add(this.deltaPos);
-
-        this.lastBonePos[i].x = frameData[point];
-        this.lastBonePos[i].y = frameData[point+1];
-        this.lastBonePos[i].z = frameData[point+2];
     }
 
 
@@ -252,7 +256,8 @@ Motivate.prototype.renderFrame = function() {
     var deltaY = frameData[point+1] - frameData[1];
     var theta = Math.asin(deltaY/dist);
     //This is y axis on model
-    this.skinnedMesh.rotation.y = theta;
+    //DEBUG
+    //this.skinnedMesh.rotation.y = theta;
     //$('#rotZ').html(theta);
 
     //About y-axis
@@ -262,7 +267,8 @@ Motivate.prototype.renderFrame = function() {
     var deltaZ = frameData[point+2] - frameData[2];
     theta = Math.asin(deltaZ/dist);
     //This is z axis on model
-    this.skinnedMesh.rotation.z = theta;
+    //DEBUG
+    //this.skinnedMesh.rotation.z = theta;
     //this.debugShape.rotation.z = theta*20;
     //$('#rotY').html(theta);
 
@@ -273,7 +279,8 @@ Motivate.prototype.renderFrame = function() {
     dist = this.pointTwo.distanceTo(this.pointOne);
     deltaY = frameData[point+1] - frameData[1];
     theta = Math.asin(deltaY/dist);
-    this.skinnedMesh.rotation.x = -Math.PI/2 + theta;
+    //DEBUG
+    //this.skinnedMesh.rotation.x = -Math.PI/2 + theta;
     //this.debugShape.rotation.x = this.skinnedMesh.rotation.x;
     //$('#rotX').html(theta);
 
