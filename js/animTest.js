@@ -94,9 +94,13 @@ Motivate.prototype.createScene = function() {
         { feature: "topRightEyelid2", point: 38, boneNum: 40}
         */
 
-        { feature: "innerTopLipLeft", point: 62, boneNum: 9},
-        { feature: "innerTopLipMiddle", point: 61, boneNum: 10},
-        { feature: "innerTopLipRight", point: 60, boneNum: 11}
+        { feature: "topLipLeft1", point: 52, boneNum: 6},
+        { feature: "topLipLeft2", point: 53, boneNum: 7},
+        { feature: "topLipLeft3", point: 54, boneNum: 8},
+        { feature: "topLipMiddle", point: 51, boneNum: 9},
+        { feature: "topLipRight1", point: 50, boneNum: 10},
+        { feature: "topLipRight2", point: 49, boneNum: 11},
+        { feature: "topLipRight3", point: 48, boneNum: 12}
 
     ];
 
@@ -125,7 +129,7 @@ Motivate.prototype.createScene = function() {
     var _this = this;
     this.skinnedMesh = undefined;
     this.mixer = undefined;
-    this.loader.load( './models/headBoneAnimationMesh4.js', function ( geometry, materials ) {
+    this.loader.load( './models/headBoneAnimationMesh7.js', function ( geometry, materials ) {
 
         for ( var k in materials ) {
 
@@ -160,6 +164,7 @@ Motivate.prototype.createGUI = function() {
         this.RotX = 0.01;
         this.RotY = 0.01;
         this.RotZ = 0.01;
+        this.Rotate = false;
     };
 
     //Create GUI
@@ -179,6 +184,8 @@ Motivate.prototype.createGUI = function() {
     rotz.onChange(function(value) {
         _this.onRotChanged(Z_AXIS, value);
     });
+
+    gui.add(this.guiControls, 'Rotate');
 };
 
 Motivate.prototype.onRotChanged = function(axis, value) {
@@ -250,39 +257,41 @@ Motivate.prototype.renderFrame = function() {
     point = 16*3;
 
     //About Z-axis
-    this.pointTwo.set(frameData[point], frameData[point+1], 0);
-    this.pointOne.set(frameData[0], frameData[1], 0);
-    var dist = this.pointTwo.distanceTo(this.pointOne);
-    var deltaY = frameData[point+1] - frameData[1];
-    var theta = Math.asin(deltaY/dist);
-    //This is y axis on model
-    //DEBUG
-    //this.skinnedMesh.rotation.y = theta;
-    //$('#rotZ').html(theta);
+    if(this.guiControls.Rotate) {
+        this.pointTwo.set(frameData[point], frameData[point+1], 0);
+        this.pointOne.set(frameData[0], frameData[1], 0);
+        var dist = this.pointTwo.distanceTo(this.pointOne);
+        var deltaY = frameData[point+1] - frameData[1];
+        var theta = Math.asin(deltaY/dist);
+        //This is y axis on model
+        //DEBUG
+        this.skinnedMesh.rotation.y = theta;
+        //$('#rotZ').html(theta);
 
-    //About y-axis
-    this.pointTwo.set(frameData[point], 0, frameData[point+2]);
-    this.pointOne.set(frameData[0], 0, frameData[2]);
-    dist = this.pointTwo.distanceTo(this.pointOne);
-    var deltaZ = frameData[point+2] - frameData[2];
-    theta = Math.asin(deltaZ/dist);
-    //This is z axis on model
-    //DEBUG
-    //this.skinnedMesh.rotation.z = theta;
-    //this.debugShape.rotation.z = theta*20;
-    //$('#rotY').html(theta);
+        //About y-axis
+        this.pointTwo.set(frameData[point], 0, frameData[point+2]);
+        this.pointOne.set(frameData[0], 0, frameData[2]);
+        dist = this.pointTwo.distanceTo(this.pointOne);
+        var deltaZ = frameData[point+2] - frameData[2];
+        theta = Math.asin(deltaZ/dist);
+        //This is z axis on model
+        //DEBUG
+        this.skinnedMesh.rotation.z = theta;
+        //this.debugShape.rotation.z = theta*20;
+        //$('#rotY').html(theta);
 
-    //About x-axis
-    point = 28*3;
-    this.pointTwo.set(0, frameData[point+1], frameData[point+2]);
-    this.pointOne.set(0, frameData[1], frameData[2]);
-    dist = this.pointTwo.distanceTo(this.pointOne);
-    deltaY = frameData[point+1] - frameData[1];
-    theta = Math.asin(deltaY/dist);
-    //DEBUG
-    //this.skinnedMesh.rotation.x = -Math.PI/2 + theta;
-    //this.debugShape.rotation.x = this.skinnedMesh.rotation.x;
-    //$('#rotX').html(theta);
+        //About x-axis
+        point = 28*3;
+        this.pointTwo.set(0, frameData[point+1], frameData[point+2]);
+        this.pointOne.set(0, frameData[1], frameData[2]);
+        dist = this.pointTwo.distanceTo(this.pointOne);
+        deltaY = frameData[point+1] - frameData[1];
+        theta = Math.asin(deltaY/dist);
+        //DEBUG
+        this.skinnedMesh.rotation.x = -Math.PI/2 + theta;
+        //this.debugShape.rotation.x = this.skinnedMesh.rotation.x;
+        //$('#rotX').html(theta);
+    }
 
     ++this.currentFrame;
 };
