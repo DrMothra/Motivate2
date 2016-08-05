@@ -51,6 +51,9 @@ Motivate.prototype.createScene = function() {
     this.deltaVector = new THREE.Vector3();
     this.pointOne = new THREE.Vector3();
     this.pointTwo = new THREE.Vector3();
+    this.deltaQuat = new THREE.Quaternion();
+    this.xAxis = new THREE.Vector3(1, 0, 0);
+    this.tempVector = new THREE.Vector3();
 
     //Sort data
     var numFrames = 331, numPoints = 66, numDims = 3, point=0;
@@ -111,6 +114,7 @@ Motivate.prototype.createGUI = function() {
     this.guiControls = new function() {
         this.Point = 61;
         this.Lines = false;
+        this.FPS = 30;
     };
 
     //Create GUI
@@ -118,6 +122,7 @@ Motivate.prototype.createGUI = function() {
 
     gui.add(this.guiControls, 'Point', 0, 65).step(1);
     gui.add(this.guiControls, 'Lines');
+    gui.add(this.guiControls, 'FPS', 1, 50).step(1);
 };
 
 Motivate.prototype.renderFrame = function(frame) {
@@ -130,7 +135,8 @@ Motivate.prototype.renderFrame = function(frame) {
     var sphereMat = new THREE.MeshLambertMaterial( {color:0x0000ff});
     var sphereMatWhite = new THREE.MeshLambertMaterial( {color:0xffffff});
     var sphere, point=0, xRotPoint = 28, yzRotPoint = 16;
-    var dist, deltaY, theta;
+    var dist, deltaY, theta, xTheta;
+    var linePoint, rotPoint;
 
     var pointGroup = new THREE.Object3D();
     pointGroup.name = 'pointGroup'+frame;
@@ -156,7 +162,7 @@ Motivate.prototype.renderFrame = function(frame) {
             this.pointTwo.set(frameData[point], 0, frameData[point+2]);
             this.pointOne.set(frameData[0], 0, frameData[2]);
             dist = this.pointTwo.distanceTo(this.pointOne);
-            var deltaZ = frameData[point+2] - frameData[2];
+            var deltaZ =  frameData[2] - frameData[point+2];
             theta = Math.asin(deltaZ/dist);
             //DEBUG
             //this.debugShape.rotation.z = theta*20;
@@ -167,12 +173,12 @@ Motivate.prototype.renderFrame = function(frame) {
             this.pointTwo.set(0, frameData[point+1], frameData[point+2]);
             this.pointOne.set(0, frameData[1], frameData[2]);
             dist = this.pointTwo.distanceTo(this.pointOne);
-            deltaY = frameData[point+1] - frameData[1];
-            theta = Math.asin(deltaY/dist);
+            deltaY = frameData[1] - frameData[point+1];
+            xTheta = Math.asin(deltaY/dist);
             //DEBUG
             //this.debugShape.rotation.x = -Math.PI/2 + (theta*10);
 
-            $('#rotX').html(theta);
+            $('#rotX').html(xTheta);
         }
 
         if(frame >0) {
@@ -183,14 +189,14 @@ Motivate.prototype.renderFrame = function(frame) {
         }
         sphere.position.set(frameData[point++], frameData[point++], frameData[point++]);
     }
-    pointGroup.position.set(-300, 175, 0);
     pointGroup.rotation.x = Math.PI;
+    pointGroup.position.set(-660, 300, 400);
 
     if(this.guiControls.Lines) {
         this.lineGeoms[0].vertices[0].x = frameData[0];
         this.lineGeoms[0].vertices[0].y = frameData[1];
         this.lineGeoms[0].vertices[0].z = frameData[2];
-        var linePoint = 16*3;
+        linePoint = 16*3;
         this.lineGeoms[0].vertices[1].x = frameData[linePoint];
         this.lineGeoms[0].vertices[1].y = frameData[linePoint+1];
         this.lineGeoms[0].vertices[1].z = frameData[linePoint+2];
@@ -227,6 +233,29 @@ Motivate.prototype.renderFrame = function(frame) {
         pointGroup.add(this.debugLines[1]);
         pointGroup.add(this.debugLines[2]);
     }
+
+    //Take rotation into account
+    //Mid - point
+    linePoint = 16*3;
+
+    this.deltaVector.x = frameData[linePoint] - frameData[0];
+    this.deltaVector.y = frameData[linePoint+1] - frameData[1];
+    this.deltaVector.z = frameData[linePoint+2] - frameData[2];
+    this.deltaVector.multiplyScalar(0.5);
+    this.deltaVector.x += frameData[0];
+    this.deltaVector.y += frameData[1];
+    this.deltaVector.z += frameData[2];
+
+    //Vector from point to origin
+    rotPoint = 28 * 3;
+    this.deltaVector.x = frameData[rotPoint] - this.deltaVector.x;
+    this.deltaVector.y = frameData[rotPoint+1] - this.deltaVector.y;
+    this.deltaVector.z = frameData[rotPoint+2] - this.deltaVector.z;
+
+    this.tempVector.set(0, 100, 0);
+    xTheta = this.tempVector.angleTo(this.deltaVector);
+    console.log("Angle = ", xTheta);
+
 };
 
 Motivate.prototype.renderNextFrame = function() {
@@ -254,6 +283,7 @@ Motivate.prototype.renderNextFrame = function() {
 
 Motivate.prototype.toggleFrames = function() {
     this.playing = !this.playing;
+    $('#play').html(this.playing ? 'Pause' : 'Play');
 };
 
 Motivate.prototype.stepToNextFrame = function() {
@@ -268,7 +298,7 @@ Motivate.prototype.update = function() {
 
     if(this.playing) {
         this.elapsedTime += delta;
-        if(this.elapsedTime >= FRAME_TIME) {
+        if(this.elapsedTime >= (1/this.guiControls.FPS)) {
             this.elapsedTime = 0;
             this.renderNextFrame();
         }

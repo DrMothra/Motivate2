@@ -2,7 +2,7 @@
  * Created by atg on 18/07/2016.
  */
 
-var FRAME_TIME = 0.04;
+var FRAMES_PER_SECOND = 30;
 var INC = 1;
 var X_AXIS=0, Y_AXIS=1, Z_AXIS=2;
 
@@ -22,7 +22,7 @@ Motivate.prototype.createScene = function() {
     BaseApp.prototype.createScene.call(this);
 
     this.playing = false;
-
+    this.frameTime = 1/FRAMES_PER_SECOND;
     this.pointOne = new THREE.Vector3();
     this.pointTwo = new THREE.Vector3();
 
@@ -123,10 +123,11 @@ Motivate.prototype.createScene = function() {
     //Bone update positions
     this.deltaPos = new THREE.Vector3();
     var frameData = this.frames[0];
-    this.startY = [];
-    for(i=0; i<this.facialFeatures.length; ++i) {
+    var point;
+    this.limitPos = [];
+    for(var i=0; i<this.facialFeatures.length; ++i) {
         point = this.facialFeatures[i].point * 3;
-        this.startY[i] = frameData[point+1];
+        this.limitPos.push(frameData[point+1]);
     }
     this.currentFrame = 1;
     this.loader = new THREE.JSONLoader();
@@ -157,10 +158,28 @@ Motivate.prototype.createScene = function() {
         _this.mixer.clipAction( skinnedMesh.geometry.animations[ 0 ] ).play();
         */
 
+        var frameData = _this.frames[0];
+        _this.startBonePos = [];
+        var boneNumber;
+        var bonePos = new THREE.Vector3();
+        for(i=0; i<_this.facialFeatures.length; ++i) {
+            boneNumber = _this.facialFeatures[i].boneNum;
+            bonePos = _this.skinnedMesh.skeleton.bones[boneNumber].position;
+            _this.startBonePos.push(new THREE.Vector3(bonePos.x, bonePos.y, bonePos.z));
+        }
         //DEBUG
         //_this.skinnedMesh.visible = false;
         console.log("Skinned = ", _this.skinnedMesh);
     });
+};
+
+Motivate.prototype.resetBones = function() {
+    //Set all bones to start pos
+    var boneNumber;
+    for(var i=0; i<this.facialFeatures.length; ++i) {
+        boneNumber = this.facialFeatures[i].boneNum;
+        this.skinnedMesh.skeleton.bones[boneNumber].position.set(this.startBonePos[i].x, this.startBonePos[i].y, this.startBonePos[i].z);
+    }
 };
 
 Motivate.prototype.createGUI = function() {
@@ -220,7 +239,7 @@ Motivate.prototype.update = function() {
 
     if(this.playing) {
         this.elapsedTime += delta;
-        if(this.elapsedTime >= FRAME_TIME) {
+        if(this.elapsedTime >= this.frameTime) {
             this.elapsedTime = 0;
             this.renderFrame();
         }
@@ -230,10 +249,14 @@ Motivate.prototype.update = function() {
 };
 
 Motivate.prototype.renderFrame = function() {
-    if(this.currentFrame >= this.numFrames) this.currentFrame = 1;
+    if(this.currentFrame >= this.numFrames) {
+        this.currentFrame = 1;
+        this.resetBones();
+    }
 
     $('#frame').html(this.currentFrame);
     var point, i, boneNumber, test;
+    var current, previous;
     var frameData = this.frames[this.currentFrame];
     var previousFrameData = this.frames[this.currentFrame-1];
 
@@ -246,16 +269,18 @@ Motivate.prototype.renderFrame = function() {
         this.deltaPos.y = frameData[point+2] - previousFrameData[point+2];
         //DEBUG
         this.deltaPos.x = this.deltaPos.y = 0;
+        current = frameData[point+1];
+        previous = previousFrameData[point+1];
 
         if(test === 1) {
-            if(frameData[point+1] > this.startY[i]) frameData[point+1] = this.startY[i];
-            if(previousFrameData[point+1] > this.startY[i]) previousFrameData[point+1] = this.startY[i];
+            if(current > this.limitPos[i]) current = this.limitPos[i];
+            if(previous > this.limitPos[i]) previous = this.limitPos[i];
         }
         if(test === -1) {
-            if(frameData[point+1] < this.startY[i]) frameData[point+1] = this.startY[i];
-            if(previousFrameData[point+1] < this.startY[i]) previousFrameData[point+1] = this.startY[i];
+            if(current < this.limitPos[i]) current = this.limitPos[i];
+            if(previous < this.limitPos[i]) previous = this.limitPos[i];
         }
-        this.deltaPos.z = (frameData[point+1] - previousFrameData[point+1]) * -1;
+        this.deltaPos.z = (current - previous) * -1;
 
         $('#yPoint').html(this.deltaPos.z);
 
