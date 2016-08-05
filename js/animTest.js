@@ -122,6 +122,15 @@ Motivate.prototype.createScene = function() {
 
     //Bone update positions
     this.deltaPos = new THREE.Vector3();
+    this.deltaVector = new THREE.Vector3();
+    this.originVector = new THREE.Vector3();
+    this.refVector = new THREE.Vector3(0, 100, 0);
+    this.deltaQuat = new THREE.Quaternion();
+    this.xAxis = new THREE.Vector3(1, 0, 0);
+    this.rotatedVector = new THREE.Vector3();
+    this.currentPoint = new THREE.Vector3();
+    this.previousOrigin = new THREE.Vector3();
+
     var frameData = this.frames[0];
     var point;
     this.limitPos = [];
@@ -132,10 +141,14 @@ Motivate.prototype.createScene = function() {
     this.currentFrame = 1;
     this.loader = new THREE.JSONLoader();
 
+    this.calcOrigin(0);
+    this.previousOrigin.copy(this.originVector);
+    this.calcOrigin(1);
+
     var _this = this;
     this.skinnedMesh = undefined;
     this.mixer = undefined;
-    this.loader.load( './models/headBoneAnimationMesh8.js', function ( geometry, materials ) {
+    this.loader.load( './models/headBoneAnimationMesh9.js', function ( geometry, materials ) {
 
         for ( var k in materials ) {
 
@@ -189,6 +202,7 @@ Motivate.prototype.createGUI = function() {
         this.RotY = 0.01;
         this.RotZ = 0.01;
         this.Rotate = false;
+        this.ScaleFactor = 0.05;
     };
 
     //Create GUI
@@ -208,6 +222,7 @@ Motivate.prototype.createGUI = function() {
     rotz.onChange(function(value) {
         _this.onRotChanged(Z_AXIS, value);
     });
+    gui.add(this.guiControls, 'ScaleFactor', 0.01, 0.2).step(0.01);
 
     gui.add(this.guiControls, 'Rotate');
 };
@@ -250,20 +265,56 @@ Motivate.prototype.update = function() {
 
 Motivate.prototype.renderFrame = function() {
     if(this.currentFrame >= this.numFrames) {
+        this.calcOrigin(0);
+        this.previousOrigin.copy(this.originVector);
         this.currentFrame = 1;
+        this.calcOrigin(this.currentFrame);
         this.resetBones();
     }
 
     $('#frame').html(this.currentFrame);
-    var point, i, boneNumber, test;
+    var point, i, boneNumber, test, xTheta;
     var current, previous;
     var frameData = this.frames[this.currentFrame];
     var previousFrameData = this.frames[this.currentFrame-1];
+
+    //Get origin
+    this.calcOrigin(this.currentFrame);
+
+    //Vector from bridge of nose
+    point = 28 * 3;
+    this.deltaVector.x = frameData[point] - this.originVector.x;
+    this.deltaVector.y = frameData[point+1] - this.originVector.y;
+    this.deltaVector.z = frameData[point+2] - this.originVector.z;
+
+    //x-axis rotation
+    xTheta = this.refVector.angleTo(this.deltaVector);
+    //Angle from zero not 90 degrees
+    xTheta = Math.PI/2 - xTheta;
+    this.deltaQuat.setFromAxisAngle(this.xAxis, -xTheta);
+
+    this.deltaVector.subVectors(this.originVector, this.previousOrigin);
 
     for(i=0; i<this.facialFeatures.length; ++i) {
         point = this.facialFeatures[i].point * 3;
         boneNumber = this.facialFeatures[i].boneNum;
         test = this.facialFeatures[i].constraint;
+
+        /*
+        this.currentPoint.x = frameData[point];
+        this.currentPoint.y = frameData[point+1];
+        this.currentPoint.z = frameData[point+2];
+
+        this.rotatedVector.x = frameData[point];
+        this.rotatedVector.y = frameData[point+1];
+        this.rotatedVector.z = frameData[point+2];
+
+        this.rotatedVector.applyQuaternion(this.deltaQuat);
+        this.currentPoint.sub(this.rotatedVector);
+
+        this.currentPoint.multiplyScalar(0.001);
+        this.skinnedMesh.skeleton.bones[boneNumber].position.add(this.currentPoint);
+        */
 
         this.deltaPos.x = frameData[point] - previousFrameData[point];
         this.deltaPos.y = frameData[point+2] - previousFrameData[point+2];
@@ -280,11 +331,12 @@ Motivate.prototype.renderFrame = function() {
             if(current < this.limitPos[i]) current = this.limitPos[i];
             if(previous < this.limitPos[i]) previous = this.limitPos[i];
         }
-        this.deltaPos.z = (current - previous) * -1;
+        this.deltaPos.z = (current - previous) - (this.deltaVector.y);
+        this.deltaPos.z *= -1;
 
         $('#yPoint').html(this.deltaPos.z);
 
-        this.deltaPos.multiplyScalar(0.05);
+        this.deltaPos.multiplyScalar(this.guiControls.ScaleFactor);
         this.skinnedMesh.skeleton.bones[boneNumber].position.add(this.deltaPos);
     }
 
@@ -330,12 +382,29 @@ Motivate.prototype.renderFrame = function() {
         //$('#rotX').html(theta);
     }
 
+    this.previousOrigin.copy(this.originVector);
+
     ++this.currentFrame;
+};
+
+Motivate.prototype.calcOrigin = function(frame) {
+    //Origin is point between ears - points 16 and 0
+    var point = 16 * 3;
+    var frameData = this.frames[frame];
+    this.originVector.x = frameData[point] - frameData[0];
+    this.originVector.y = frameData[point+1] - frameData[1];
+    this.originVector.z = frameData[point+2] - frameData[2];
+    this.originVector.multiplyScalar(0.5);
+    this.originVector.x += frameData[0];
+    this.originVector.y += frameData[1];
+    this.originVector.z += frameData[2];
 };
 
 Motivate.prototype.toggleFrames = function() {
     this.playing = !this.playing;
     $('#play').html(this.playing ? 'Pause' : 'Play');
+    var videoElem = document.getElementById("videoPlayer");
+    this.playing ? videoElem.play() : videoElem.pause();
 };
 
 Motivate.prototype.stepToNextFrame = function() {

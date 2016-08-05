@@ -30,6 +30,10 @@
     top: 1%;
     left: 1%;
 }
+#videoPlayerContainer {
+    bottom: 30%;
+    left: 5%;
+}
 #notSupported {
     background: darkgrey;
     border-radius: 15px;

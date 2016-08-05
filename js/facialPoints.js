@@ -42,11 +42,6 @@ Motivate.prototype.createScene = function() {
         this.debugLines.push(new THREE.Line(this.lineGeoms[i], lineMat));
     }
 
-    //Neck point
-    geom = new THREE.SphereBufferGeometry(1, 16, 16);
-    this.neckPoint = new THREE.Mesh(geom, mat);
-    this.scene.add(this.neckPoint);
-
     //Delta vectors
     this.deltaVector = new THREE.Vector3();
     this.pointOne = new THREE.Vector3();
@@ -54,6 +49,10 @@ Motivate.prototype.createScene = function() {
     this.deltaQuat = new THREE.Quaternion();
     this.xAxis = new THREE.Vector3(1, 0, 0);
     this.tempVector = new THREE.Vector3();
+    this.originVector = new THREE.Vector3();
+    this.refVector = new THREE.Vector3(0, 100, 0);
+    this.rotatedVector = new THREE.Vector3();
+    this.currentPoint = new THREE.Vector3();
 
     //Sort data
     var numFrames = 331, numPoints = 66, numDims = 3, point=0;
@@ -113,7 +112,7 @@ Motivate.prototype.createGUI = function() {
     var _this = this;
     this.guiControls = new function() {
         this.Point = 61;
-        this.Lines = false;
+        this.Lines = true;
         this.FPS = 30;
     };
 
@@ -138,6 +137,7 @@ Motivate.prototype.renderFrame = function(frame) {
     var dist, deltaY, theta, xTheta;
     var linePoint, rotPoint;
 
+    
     var pointGroup = new THREE.Object3D();
     pointGroup.name = 'pointGroup'+frame;
     this.scene.add(pointGroup);
@@ -236,26 +236,51 @@ Motivate.prototype.renderFrame = function(frame) {
 
     //Take rotation into account
     //Mid - point
-    linePoint = 16*3;
+    //Get origin
+    point = 16 * 3;
+    this.originVector.x = frameData[point] - frameData[0];
+    this.originVector.y = frameData[point+1] - frameData[1];
+    this.originVector.z = frameData[point+2] - frameData[2];
+    this.originVector.multiplyScalar(0.5);
+    this.originVector.x += frameData[0];
+    this.originVector.y += frameData[1];
+    this.originVector.z += frameData[2];
 
-    this.deltaVector.x = frameData[linePoint] - frameData[0];
-    this.deltaVector.y = frameData[linePoint+1] - frameData[1];
-    this.deltaVector.z = frameData[linePoint+2] - frameData[2];
-    this.deltaVector.multiplyScalar(0.5);
-    this.deltaVector.x += frameData[0];
-    this.deltaVector.y += frameData[1];
-    this.deltaVector.z += frameData[2];
+    console.log("Origin = ", this.originVector);
 
-    //Vector from point to origin
-    rotPoint = 28 * 3;
-    this.deltaVector.x = frameData[rotPoint] - this.deltaVector.x;
-    this.deltaVector.y = frameData[rotPoint+1] - this.deltaVector.y;
-    this.deltaVector.z = frameData[rotPoint+2] - this.deltaVector.z;
+    //Vector from bridge of nose
+    point = 28 * 3;
+    this.deltaVector.x = frameData[point] - this.originVector.x;
+    this.deltaVector.y = frameData[point+1] - this.originVector.y;
+    this.deltaVector.z = frameData[point+2] - this.originVector.z;
 
-    this.tempVector.set(0, 100, 0);
-    xTheta = this.tempVector.angleTo(this.deltaVector);
-    console.log("Angle = ", xTheta);
+    console.log("Delta = ", this.deltaVector);
 
+    xTheta = this.refVector.angleTo(this.deltaVector);
+    //Angle from zero not 90 degrees
+    xTheta = Math.PI/2 - xTheta;
+    console.log("Theta = ", xTheta);
+
+    this.deltaQuat.setFromAxisAngle(this.xAxis, -xTheta);
+
+    point = 56 * 3;
+    this.currentPoint.x = frameData[point];
+    this.currentPoint.y = frameData[point+1];
+    this.currentPoint.z = frameData[point+2];
+
+    this.rotatedVector.x = frameData[point];
+    this.rotatedVector.y = frameData[point+1];
+    this.rotatedVector.z = frameData[point+2];
+
+    console.log("Current = ", this.currentPoint);
+
+    this.rotatedVector.applyQuaternion(this.deltaQuat);
+
+    console.log("Rotated = ", this.rotatedVector);
+
+    this.currentPoint.sub(this.rotatedVector);
+
+    console.log("Delta = ", this.currentPoint);
 };
 
 Motivate.prototype.renderNextFrame = function() {
