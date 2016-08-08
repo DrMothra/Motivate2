@@ -130,7 +130,7 @@ Motivate.prototype.renderFrame = function(frame) {
     if(current) {
         this.scene.remove(current);
     }
-    var sphereGeom = new THREE.SphereBufferGeometry(1, 16, 16);
+    var sphereGeom = new THREE.SphereBufferGeometry(0.5, 16, 16);
     var sphereMat = new THREE.MeshLambertMaterial( {color:0x0000ff});
     var sphereMatWhite = new THREE.MeshLambertMaterial( {color:0xffffff});
     var sphere, point=0, xRotPoint = 28, yzRotPoint = 16;
@@ -190,7 +190,7 @@ Motivate.prototype.renderFrame = function(frame) {
         sphere.position.set(frameData[point++], frameData[point++], frameData[point++]);
     }
     pointGroup.rotation.x = Math.PI;
-    pointGroup.position.set(-660, 300, 400);
+    pointGroup.position.set(-250, 110, 0);
 
     if(this.guiControls.Lines) {
         this.lineGeoms[0].vertices[0].x = frameData[0];
