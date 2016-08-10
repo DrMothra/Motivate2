@@ -135,6 +135,13 @@ Motivate.prototype.renderFrame = function() {
     var i, eyePoint, mouthPoint;
     var current, previous;
 
+    if(this.currentFrame >= this.numFrames) {
+        this.calcOrigin(0);
+        this.previousOrigin.copy(this.originVector);
+        this.currentFrame = 1;
+        var videoElem = document.getElementById("videoPlayer");
+        videoElem.play();
+    }
 
     var frameData = this.frames[this.currentFrame];
     var previousFrameData = this.frames[this.currentFrame-1];
@@ -236,29 +243,6 @@ Motivate.prototype.renderFrame = function() {
     this.mouthGeom.verticesNeedUpdate = true;
 };
 
-Motivate.prototype.renderNextFrame = function() {
-
-    var next = this.currentFrame + 1;
-    if(next >= this.numFrames) next = 0;
-    this.renderFrame(next);
-    this.currentFrame = next;
-
-    /*
-    var feature = this.facialFeatures[0];
-
-    var offset = feature.point*3, previous = next -1;
-    this.deltaVector.x = this.frames[next][offset] - this.frames[previous][offset];
-    this.deltaVector.z = this.frames[next][offset+1] - this.frames[previous][offset+1];
-    this.deltaVector.y = (this.frames[next][offset+2] - this.frames[previous][offset+2]) * -1;
-    this.deltaVector.multiplyScalar(0.01);
-
-    for(var i=0; i<feature.vertices.length; ++i) {
-        this.headMesh.geometry.vertices[feature.vertices[i]].add(this.deltaVector);
-    }
-    this.headMesh.geometry.verticesNeedUpdate = true;
-    */
-};
-
 Motivate.prototype.calcOrigin = function(frame) {
     //Origin is point between ears - points 16 and 0
     var point = 16 * 3;
@@ -282,7 +266,7 @@ Motivate.prototype.toggleFrames = function() {
 Motivate.prototype.stepToNextFrame = function() {
     if(this.playing) return;
 
-    this.renderNextFrame();
+    this.renderFrame();
 };
 
 Motivate.prototype.update = function() {
@@ -292,8 +276,6 @@ Motivate.prototype.update = function() {
     if(this.playing) {
         this.elapsedTime += delta;
         if(this.elapsedTime >= this.frameTime) {
-            //DEBUG
-            console.log("Elapsed = ", this.elapsedTime);
             this.elapsedTime -= this.frameTime;
             this.renderFrame();
         }
