@@ -148,7 +148,7 @@ Motivate.prototype.createScene = function() {
     var _this = this;
     this.skinnedMesh = undefined;
     this.mixer = undefined;
-    this.loader.load( './models/headBoneAnimationMesh9.js', function ( geometry, materials ) {
+    this.loader.load( './models/headBoneAnimationMesh10.js', function ( geometry, materials ) {
 
         for ( var k in materials ) {
 
@@ -255,7 +255,7 @@ Motivate.prototype.update = function() {
     if(this.playing) {
         this.elapsedTime += delta;
         if(this.elapsedTime >= this.frameTime) {
-            this.elapsedTime = 0;
+            this.elapsedTime -= this.frameTime;
             this.renderFrame();
         }
     }
@@ -268,7 +268,6 @@ Motivate.prototype.renderFrame = function() {
         this.calcOrigin(0);
         this.previousOrigin.copy(this.originVector);
         this.currentFrame = 1;
-        this.calcOrigin(this.currentFrame);
         this.resetBones();
     }
 
@@ -280,18 +279,6 @@ Motivate.prototype.renderFrame = function() {
 
     //Get origin
     this.calcOrigin(this.currentFrame);
-
-    //Vector from bridge of nose
-    point = 28 * 3;
-    this.deltaVector.x = frameData[point] - this.originVector.x;
-    this.deltaVector.y = frameData[point+1] - this.originVector.y;
-    this.deltaVector.z = frameData[point+2] - this.originVector.z;
-
-    //x-axis rotation
-    xTheta = this.refVector.angleTo(this.deltaVector);
-    //Angle from zero not 90 degrees
-    xTheta = Math.PI/2 - xTheta;
-    this.deltaQuat.setFromAxisAngle(this.xAxis, -xTheta);
 
     this.deltaVector.subVectors(this.originVector, this.previousOrigin);
 
@@ -320,9 +307,11 @@ Motivate.prototype.renderFrame = function() {
         this.deltaPos.y = frameData[point+2] - previousFrameData[point+2];
         //DEBUG
         this.deltaPos.x = this.deltaPos.y = 0;
-        current = frameData[point+1];
+        current = frameData[point+1] - this.deltaVector.y;
         previous = previousFrameData[point+1];
 
+
+        /*
         if(test === 1) {
             if(current > this.limitPos[i]) current = this.limitPos[i];
             if(previous > this.limitPos[i]) previous = this.limitPos[i];
@@ -331,55 +320,16 @@ Motivate.prototype.renderFrame = function() {
             if(current < this.limitPos[i]) current = this.limitPos[i];
             if(previous < this.limitPos[i]) previous = this.limitPos[i];
         }
-        this.deltaPos.z = (current - previous) - (this.deltaVector.y);
+        */
+
+
+        this.deltaPos.z = (current - previous);
         this.deltaPos.z *= -1;
 
         $('#yPoint').html(this.deltaPos.z);
 
         this.deltaPos.multiplyScalar(this.guiControls.ScaleFactor);
         this.skinnedMesh.skeleton.bones[boneNumber].position.add(this.deltaPos);
-    }
-
-
-    //Rotation
-    //$('#frame').html(this.currentFrame);
-    point = 16*3;
-
-    //About Z-axis
-    if(this.guiControls.Rotate) {
-        this.pointTwo.set(frameData[point], frameData[point+1], 0);
-        this.pointOne.set(frameData[0], frameData[1], 0);
-        var dist = this.pointTwo.distanceTo(this.pointOne);
-        var deltaY = frameData[point+1] - frameData[1];
-        var theta = Math.asin(deltaY/dist);
-        //This is y axis on model
-        //DEBUG
-        this.skinnedMesh.rotation.y = theta;
-        //$('#rotZ').html(theta);
-
-        //About y-axis
-        this.pointTwo.set(frameData[point], 0, frameData[point+2]);
-        this.pointOne.set(frameData[0], 0, frameData[2]);
-        dist = this.pointTwo.distanceTo(this.pointOne);
-        var deltaZ = frameData[point+2] - frameData[2];
-        theta = Math.asin(deltaZ/dist);
-        //This is z axis on model
-        //DEBUG
-        this.skinnedMesh.rotation.z = theta;
-        //this.debugShape.rotation.z = theta*20;
-        //$('#rotY').html(theta);
-
-        //About x-axis
-        point = 28*3;
-        this.pointTwo.set(0, frameData[point+1], frameData[point+2]);
-        this.pointOne.set(0, frameData[1], frameData[2]);
-        dist = this.pointTwo.distanceTo(this.pointOne);
-        deltaY = frameData[point+1] - frameData[1];
-        theta = Math.asin(deltaY/dist);
-        //DEBUG
-        this.skinnedMesh.rotation.x = -Math.PI/2 + theta;
-        //this.debugShape.rotation.x = this.skinnedMesh.rotation.x;
-        //$('#rotX').html(theta);
     }
 
     this.previousOrigin.copy(this.originVector);
