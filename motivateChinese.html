@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Motivate Chinese Speaker</title>
+
+    <script type="text/javascript" src="js/jquery-1.11.2.min.js"></script>
+    <script type="text/javascript" src="js/three78.js"></script>
+    <script type="text/javascript" src="js/TrackballControls.js"></script>
+    <script type="text/javascript" src="js/dat.gui.js"></script>
+    <script type="text/javascript" src="js/baseApp.js?v=0.2"></script>
+    <script type="text/javascript" src="js/zoltanPoints3.js"></script>
+    <script type="text/javascript" src="js/motivate2.js"></script>
+
+    <link rel="stylesheet" href="css/bootstrap.min.css?v=0.1">
+    <link rel="stylesheet" href="css/bootstrap-theme.min.css?v=0.1">
+    <link href="css/motivateStyles.css?v=0.1" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<div id="WebGL-output">
+
+</div>
+
+<div id="control" class="displayInfo">
+    <button id="play" type="button" class="btn btn-default">Play</button>
+</div>
+
+<div id="control2" class="displayInfo">
+    <button id="next" type="button" class="btn btn-default">Next</button>
+</div>
+
+<div id="info" class="displayInfo">
+    <p>Frame: <span id="frame">0</span></p>
+    <p>Point: <span id="point">37</span></p>
+    <p>X: <span id="xPoint">0</span></p>
+    <p>Y: <span id="yPoint">0</span></p>
+    <p>Z: <span id="zPoint">0</span></p>
+
+    <p>RotX: <span id="rotX">0</span></p>
+    <p>RotY: <span id="rotY">0</span></p>
+    <p>RotZ: <span id="rotZ">0</span></p>
+</div>
+
+
+<video id="videoPlayer" class="noDisplay" >
+    <source src="data/zoltan.mp4" type="video/mp4">
+Your browser does not support video
+</video>
+
+</body>
+</html>
