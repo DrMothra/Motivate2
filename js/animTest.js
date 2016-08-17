@@ -140,7 +140,7 @@ Motivate.prototype.createScene = function() {
 
     var _this = this;
     this.skinnedMesh = undefined;
-    this.loader.load( './models/headBoneAnimationMesh10.js', function ( geometry, materials ) {
+    this.loader.load( './models/headBoneAnimationMesh12.js', function ( geometry, materials ) {
 
         for ( var k in materials ) {
 
@@ -176,6 +176,11 @@ Motivate.prototype.createScene = function() {
         //_this.skinnedMesh.visible = false;
         console.log("Skinned = ", _this.skinnedMesh);
     });
+
+    this.loader.load('./models/headMeshEyes.js', function(geometry, materials) {
+        _this.eyeMesh = new THREE.Mesh(geometry, new THREE.MultiMaterial(materials));
+        _this.scene.add(_this.eyeMesh);
+    })
 };
 
 Motivate.prototype.resetBones = function() {
