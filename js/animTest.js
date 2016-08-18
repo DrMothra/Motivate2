@@ -37,6 +37,7 @@ Motivate.prototype.createScene = function() {
     var numFrames = 331, numPoints = 66, numDims = 3, point=0;
     this.numFrames = numFrames;
     this.frames = [];
+    this.rawFrames = [];
     var frame, i;
     var frameOffset = numFrames*numDims;
     for(frame=0; frame<numFrames; ++frame) {
@@ -45,6 +46,17 @@ Motivate.prototype.createScene = function() {
         for (i = 0; i < numPoints; ++i) {
             for (var j = 0; j < 3; ++j) {
                 this.frames[frame][(i * numDims) + j] = facialData[j + (frameOffset * i) + (frame * numDims)];
+            }
+        }
+    }
+
+    //Raw data
+    for(frame=0; frame<numFrames; ++frame) {
+        this.rawFrames[frame] = [];
+
+        for (i = 0; i < numPoints; ++i) {
+            for (var j = 0; j < 3; ++j) {
+                this.rawFrames[frame][(i * numDims) + j] = rawData[j + (frameOffset * i) + (frame * numDims)];
             }
         }
     }
@@ -95,18 +107,32 @@ Motivate.prototype.createScene = function() {
         */
 
 
-        { feature: "bottomLipLeft1", point: 56, boneNum: 1, constraint: -1},
-        { feature: "bottomLipLeft2", point: 55, boneNum: 2, constraint: -1},
-        { feature: "bottomLipMiddle", point: 57, boneNum: 3, constraint: -1},
-        { feature: "bottomLipRight1", point: 58, boneNum: 4, constraint: -1},
-        { feature: "bottomLipRight2", point: 59, boneNum: 5, constraint: -1},
-        { feature: "topLipLeft1", point: 52, boneNum: 6, constraint: 1},
-        { feature: "topLipLeft2", point: 53, boneNum: 7, constraint: 1},
-        { feature: "topLipLeft3", point: 54, boneNum: 8, constraint: 1},
-        { feature: "topLipMiddle", point: 51, boneNum: 9, constraint: 1},
-        { feature: "topLipRight1", point: 50, boneNum: 10, constraint: 1},
-        { feature: "topLipRight2", point: 49, boneNum: 11, constraint: 1},
-        { feature: "topLipRight3", point: 48, boneNum: 12, constraint: 1}
+        { feature: "BottomLeftEyelid2", point: 46, boneNum: 1, constraint: -1},
+        { feature: "BottomLeftEyelid3", point: 47, boneNum: 2, constraint: -1},
+        { feature: "BottomLipLeft1", point: 56, boneNum: 3, constraint: -1},
+        { feature: "BottomLipLeft2", point: 55, boneNum: 4, constraint: -1},
+        { feature: "BottomLipMiddle", point: 57, boneNum: 5, constraint: -1},
+        { feature: "BottomLipRight1", point: 58, boneNum: 6, constraint: 1},
+        { feature: "BottomLipRight2", point: 59, boneNum: 7, constraint: 1},
+        { feature: "BottomRightEyelid2", point: 41, boneNum: 8, constraint: 1},
+        { feature: "BottomRightEyelid3", point: 40, boneNum: 9, constraint: 1},
+        { feature: "LeftEyebrowLeft2", point: 26, boneNum: 10, constraint: 1},
+        { feature: "LeftEyebrowMiddle", point: 24, boneNum: 11, constraint: 1},
+        { feature: "LeftEyebrowRight2", point: 22, boneNum: 12, constraint: 1},
+        { feature: "RightEyebrowLeft2", point: 21, boneNum: 13, constraint: 1},
+        { feature: "RightEyebrowMiddle", point: 19, boneNum: 14, constraint: 1},
+        { feature: "RightEyebrowRight2", point: 17, boneNum: 15, constraint: 1},
+        { feature: "TopLeftEyelid1", point: 44, boneNum: 16, constraint: 1},
+        { feature: "TopLeftEyelid2", point: 43, boneNum: 17, constraint: 1},
+        { feature: "TopLipLeft1", point: 52, boneNum: 18, constraint: 1},
+        { feature: "TopLipLeft2", point: 53, boneNum: 19, constraint: 1},
+        { feature: "TopLipLeft3", point: 54, boneNum: 20, constraint: 1},
+        { feature: "TopLipMiddle", point: 51, boneNum: 21, constraint: 1},
+        { feature: "TopLipRight1", point: 50, boneNum: 22, constraint: 1},
+        { feature: "TopLipRight2", point: 49, boneNum: 23, constraint: 1},
+        { feature: "TopLipRight3", point: 48, boneNum: 24, constraint: 1},
+        { feature: "TopRightEyelid1", point: 37, boneNum: 25, constraint: 1},
+        { feature: "TopRightEyelid2", point: 38, boneNum: 26, constraint: 1}
     ];
 
     //DEBUG spheres
@@ -123,8 +149,12 @@ Motivate.prototype.createScene = function() {
     //Bone update positions
     this.startOrigin = new THREE.Vector3();
     this.currentOrigin = new THREE.Vector3();
+    this.rawOrigin = new THREE.Vector3();
     this.deltaOrigin = new THREE.Vector3();
     this.deltaPos = new THREE.Vector3();
+    this.deltaVector = new THREE.Vector3();
+    this.refXVector = new THREE.Vector3(0, 1, 0);
+    this.refYVector = new THREE.Vector3();
 
     var frameData = this.frames[0];
     this.startPos = [];
@@ -133,12 +163,19 @@ Motivate.prototype.createScene = function() {
         this.startPos.push(frameData[point+1]);
     }
     this.currentFrame = 1;
+    this.neckOffset = 20;
     this.loader = new THREE.JSONLoader();
 
     this.calcOrigin(0);
     this.startOrigin.copy(this.currentOrigin);
 
     var _this = this;
+    this.faceGroup = new THREE.Object3D();
+    this.faceGroup.position.y = -this.neckOffset;
+    this.scene.add(this.faceGroup);
+
+    this.camera.position.set(0, 0, 100 );
+
     this.skinnedMesh = undefined;
     this.loader.load( './models/headBoneAnimationMesh12.js', function ( geometry, materials ) {
 
@@ -148,15 +185,23 @@ Motivate.prototype.createScene = function() {
 
         }
 
+        //DEBUG - Neck position
+        var sphereGeom = new THREE.SphereBufferGeometry(3, 16, 16);
+        var sphereMat = new THREE.MeshLambertMaterial( {color: 0x00ff00});
+        var sphere = new THREE.Mesh(sphereGeom, sphereMat);
+        //_this.scene.add(sphere);
+
         _this.skinnedMesh = new THREE.SkinnedMesh(geometry, new THREE.MultiMaterial(materials));
         _this.skinnedMesh.scale.set( 1, 1, 1 );
         _this.skinnedMesh.rotation.x = -Math.PI/2;
+        _this.skinnedMesh.position.y = _this.neckOffset;
+        _this.faceGroup.add(_this.skinnedMesh);
 
         // Note: We test the corresponding code path with this example -
         // you shouldn't include the next line into your own code:
         //skinnedMesh.skeleton.useVertexTexture = false;
 
-        _this.scene.add( _this.skinnedMesh );
+        //_this.scene.add( _this.skinnedMesh );
         _this.animating = true;
         /*
         _this.mixer = new THREE.AnimationMixer( skinnedMesh );
@@ -179,7 +224,8 @@ Motivate.prototype.createScene = function() {
 
     this.loader.load('./models/headMeshEyes.js', function(geometry, materials) {
         _this.eyeMesh = new THREE.Mesh(geometry, new THREE.MultiMaterial(materials));
-        _this.scene.add(_this.eyeMesh);
+        _this.eyeMesh.position.y = _this.neckOffset;
+        _this.faceGroup.add(_this.eyeMesh);
     })
 };
 
@@ -227,15 +273,15 @@ Motivate.prototype.createGUI = function() {
 Motivate.prototype.onRotChanged = function(axis, value) {
     switch(axis) {
         case X_AXIS:
-            this.skinnedMesh.rotation.x = -Math.PI/2 - value;
+            this.faceGroup.rotation.x = value;
             break;
 
         case Y_AXIS:
-            this.skinnedMesh.rotation.y = value;
+            this.faceGroup.rotation.y = value;
             break;
 
         case Z_AXIS:
-            this.skinnedMesh.rotation.z = value;
+            this.faceGroup.rotation.z = value;
             break;
 
         default:
@@ -267,15 +313,32 @@ Motivate.prototype.renderFrame = function() {
     }
 
     $('#frame').html(this.currentFrame);
-    var point, i, boneNumber, test, xTheta;
+    var point, i, boneNumber, test, xRotation, yRotation, zRotation;
     var current, previous;
     var frameData = this.frames[this.currentFrame];
+    var rawData = this.rawFrames[this.currentFrame];
     var previousFrameData = this.frames[this.currentFrame-1];
 
     //Get origin
     this.calcOrigin(this.currentFrame);
-
     this.deltaOrigin.subVectors(this.currentOrigin, this.startOrigin);
+
+    //Rotations
+    this.calcRawOrigin(this.currentFrame);
+    //Vector from bridge of nose
+    point = 28 * 3;
+    //DEBUG
+    console.log("Raw origin = ", this.rawOrigin);
+
+    this.deltaVector.x = rawData[point] - this.rawOrigin.x;
+    this.deltaVector.y = rawData[point+1] - this.rawOrigin.y;
+    this.deltaVector.z = rawData[point+2] - this.rawOrigin.z;
+
+    console.log("Delta = ", this.deltaVector);
+
+    //x-axis rotation
+    xRotation = this.refXVector.angleTo(this.deltaVector);
+    this.faceGroup.rotation.x = -Math.PI/2 + xRotation;
 
     for(i=0; i<this.facialFeatures.length; ++i) {
         point = this.facialFeatures[i].point * 3;
@@ -288,6 +351,7 @@ Motivate.prototype.renderFrame = function() {
         current = frameData[point+1] - this.deltaOrigin.y;
         current -= this.startPos[i];
 
+        /*
         if(test === 1) {
             if(current > 0) {
                 current = 0;
@@ -300,11 +364,12 @@ Motivate.prototype.renderFrame = function() {
                 current = 0;
             }
         }
+        */
 
         this.deltaPos.z = current * -1;
         //DEBUG
-        this.deltaPos.x = 0;
-        this.deltaPos.y = 0;
+        //this.deltaPos.x = 0;
+        //this.deltaPos.y = 0;
 
         $('#yPoint').html(this.deltaPos.z);
 
@@ -326,6 +391,19 @@ Motivate.prototype.calcOrigin = function(frame) {
     this.currentOrigin.x += frameData[0];
     this.currentOrigin.y += frameData[1];
     this.currentOrigin.z += frameData[2];
+};
+
+Motivate.prototype.calcRawOrigin = function(frame) {
+    //Origin is point between ears - points 16 and 0
+    var point = 16 * 3;
+    var rawData = this.rawFrames[frame];
+    this.rawOrigin.x = rawData[point] - rawData[0];
+    this.rawOrigin.y = rawData[point+1] - rawData[1];
+    this.rawOrigin.z = rawData[point+2] - rawData[2];
+    this.rawOrigin.multiplyScalar(0.5);
+    this.rawOrigin.x += rawData[0];
+    this.rawOrigin.y += rawData[1];
+    this.rawOrigin.z += rawData[2];
 };
 
 Motivate.prototype.toggleFrames = function() {
