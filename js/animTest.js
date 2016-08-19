@@ -124,15 +124,11 @@ Motivate.prototype.createScene = function() {
         { feature: "RightEyebrowRight2", point: 17, boneNum: 15, constraint: 1},
         { feature: "TopLeftEyelid1", point: 44, boneNum: 16, constraint: 1},
         { feature: "TopLeftEyelid2", point: 43, boneNum: 17, constraint: 1},
-        { feature: "TopLipLeft1", point: 52, boneNum: 18, constraint: 1},
-        { feature: "TopLipLeft2", point: 53, boneNum: 19, constraint: 1},
-        { feature: "TopLipLeft3", point: 54, boneNum: 20, constraint: 1},
-        { feature: "TopLipMiddle", point: 51, boneNum: 21, constraint: 1},
-        { feature: "TopLipRight1", point: 50, boneNum: 22, constraint: 1},
-        { feature: "TopLipRight2", point: 49, boneNum: 23, constraint: 1},
-        { feature: "TopLipRight3", point: 48, boneNum: 24, constraint: 1},
-        { feature: "TopRightEyelid1", point: 37, boneNum: 25, constraint: 1},
-        { feature: "TopRightEyelid2", point: 38, boneNum: 26, constraint: 1}
+        { feature: "TopLipLeft3", point: 54, boneNum: 18, constraint: 1},
+        { feature: "TopLipMiddle", point: 51, boneNum: 19, constraint: 1},
+        { feature: "TopLipRight3", point: 48, boneNum: 20, constraint: 1},
+        { feature: "TopRightEyelid1", point: 37, boneNum: 21, constraint: 1},
+        { feature: "TopRightEyelid2", point: 38, boneNum: 22, constraint: 1}
     ];
 
     //DEBUG spheres
@@ -154,7 +150,7 @@ Motivate.prototype.createScene = function() {
     this.deltaPos = new THREE.Vector3();
     this.deltaVector = new THREE.Vector3();
     this.refXVector = new THREE.Vector3(0, 1, 0);
-    this.refYVector = new THREE.Vector3();
+    this.refYVector = new THREE.Vector3(0, 0, -1);
 
     var frameData = this.frames[0];
     this.startPos = [];
@@ -177,7 +173,7 @@ Motivate.prototype.createScene = function() {
     this.camera.position.set(0, 0, 100 );
 
     this.skinnedMesh = undefined;
-    this.loader.load( './models/headBoneAnimationMesh12.js', function ( geometry, materials ) {
+    this.loader.load( './models/headBoneAnimationMesh13.js', function ( geometry, materials ) {
 
         for ( var k in materials ) {
 
@@ -245,7 +241,7 @@ Motivate.prototype.createGUI = function() {
         this.RotY = 0.01;
         this.RotZ = 0.01;
         this.Rotate = false;
-        this.ScaleFactor = 0.15;
+        this.ScaleFactor = 0.25;
     };
 
     //Create GUI
@@ -328,17 +324,33 @@ Motivate.prototype.renderFrame = function() {
     //Vector from bridge of nose
     point = 28 * 3;
     //DEBUG
-    console.log("Raw origin = ", this.rawOrigin);
+    //console.log("Raw origin = ", this.rawOrigin);
 
     this.deltaVector.x = rawData[point] - this.rawOrigin.x;
     this.deltaVector.y = rawData[point+1] - this.rawOrigin.y;
     this.deltaVector.z = rawData[point+2] - this.rawOrigin.z;
 
-    console.log("Delta = ", this.deltaVector);
+    //console.log("Delta = ", this.deltaVector);
 
     //x-axis rotation
     xRotation = this.refXVector.angleTo(this.deltaVector);
-    this.faceGroup.rotation.x = -Math.PI/2 + xRotation;
+
+    //y-axis rotation
+    point = 0;
+    this.deltaVector.x = rawData[point] - this.rawOrigin.x;
+    this.deltaVector.y = rawData[point+1] - this.rawOrigin.y;
+    this.deltaVector.z = rawData[point+2] - this.rawOrigin.z;
+
+    yRotation = this.refYVector.angleTo(this.deltaVector);
+
+    //z-axis rotation
+    zRotation = this.refXVector.angleTo(this.deltaVector);
+
+    if(this.guiControls.Rotate) {
+        this.faceGroup.rotation.x = Math.PI/2 - xRotation;
+        this.faceGroup.rotation.y = Math.PI/2 - yRotation;
+        this.faceGroup.rotation.z = Math.PI/2 - zRotation;
+    }
 
     for(i=0; i<this.facialFeatures.length; ++i) {
         point = this.facialFeatures[i].point * 3;
