@@ -22,15 +22,23 @@ Motivate.prototype.createScene = function() {
     BaseApp.prototype.createScene.call(this);
 
     this.loader = new THREE.JSONLoader();
+    this.mixer = undefined;
 
     this.camera.position.set(0, 0, 5 );
     var _this = this;
 
-    this.loader.load( './models/blue.json', function ( geometry, materials ) {
+    this.loader.load( './models/monster.json', function ( geometry, materials ) {
 
-        _this.skinnedMesh = new THREE.Mesh(geometry, new THREE.MultiMaterial(materials));
+        for ( var k in materials ) {
+
+            materials[k].skinning = true;
+
+        }
+
+        _this.skinnedMesh = new THREE.SkinnedMesh(geometry, new THREE.MultiMaterial(materials));
         _this.skinnedMesh.scale.set( 1, 1, 1 );
         _this.scene.add(_this.skinnedMesh);
+        _this.mixer = new THREE.AnimationMixer(_this.skinnedMesh);
 
         console.log("Skinned = ", _this.skinnedMesh);
     });
@@ -92,6 +100,9 @@ Motivate.prototype.update = function() {
     //Perform any updates
 
     var delta = this.clock.getDelta();
+    if(this.mixer) {
+        this.mixer.update(delta);
+    }
 
     BaseApp.prototype.update.call(this);
 };
