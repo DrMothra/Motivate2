@@ -22,12 +22,11 @@ Motivate.prototype.createScene = function() {
     BaseApp.prototype.createScene.call(this);
 
     this.loader = new THREE.JSONLoader();
-    this.mixer = undefined;
 
     this.camera.position.set(0, 0, 5 );
     var _this = this;
 
-    this.loader.load( './models/monster.json', function ( geometry, materials ) {
+    this.loader.load( './models/holmen_holmen_face_rig.json', function ( geometry, materials ) {
 
         for ( var k in materials ) {
 
@@ -38,7 +37,13 @@ Motivate.prototype.createScene = function() {
         _this.skinnedMesh = new THREE.SkinnedMesh(geometry, new THREE.MultiMaterial(materials));
         _this.skinnedMesh.scale.set( 1, 1, 1 );
         _this.scene.add(_this.skinnedMesh);
-        _this.mixer = new THREE.AnimationMixer(_this.skinnedMesh);
+
+        var boneNames = [];
+        for(var i=0; i<_this.skinnedMesh.skeleton.bones.length; ++i) {
+            boneNames.push(_this.skinnedMesh.skeleton.bones[i].name);
+        }
+
+        _this.gui.add(_this.guiControls, "Bones", boneNames);
 
         console.log("Skinned = ", _this.skinnedMesh);
     });
@@ -48,33 +53,114 @@ Motivate.prototype.createScene = function() {
 Motivate.prototype.createGUI = function() {
     var _this = this;
     this.guiControls = new function() {
+        this.Bones = "";
+        this.PosX = 0.01;
+        this.PosY = 0.01;
+        this.PosZ = 0.01;
         this.RotX = 0.01;
         this.RotY = 0.01;
         this.RotZ = 0.01;
-        this.Rotate = false;
+        
         this.ScaleFactor = 0.25;
     };
 
     //Create GUI
-    var gui = new dat.GUI();
+    this.gui = new dat.GUI();
 
-    var rotx = gui.add(this.guiControls, 'RotX', -3, 3).step(0.1);
+    var posx = this.gui.add(this.guiControls, "PosX", -10, 10).step(0.1);
+    posx.onChange(function(value) {
+        _this.onBonePosChanged(X_AXIS, value);
+    });
+
+    var posy = this.gui.add(this.guiControls, "PosY", -10, 10).step(0.1);
+    posy.onChange(function(value) {
+        _this.onBonePosChanged(Y_AXIS, value);
+    });
+
+    var posz = this.gui.add(this.guiControls, "PosZ", -10, 10).step(0.1);
+    posz.onChange(function(value) {
+        _this.onBonePosChanged(Z_AXIS, value);
+    });
+
+    var rotx = this.gui.add(this.guiControls, "RotX", -4, 4).step(0.1);
     rotx.onChange(function(value) {
-        _this.onRotChanged(X_AXIS, value);
+        _this.onBoneRotChanged(X_AXIS, value);
     });
 
-    var roty = gui.add(this.guiControls, 'RotY', -3, 3).step(0.1);
+    var roty = this.gui.add(this.guiControls, "RotY", -4, 4).step(0.1);
     roty.onChange(function(value) {
-        _this.onRotChanged(Y_AXIS, value);
+        _this.onBoneRotChanged(Y_AXIS, value);
     });
 
-    var rotz = gui.add(this.guiControls, 'RotZ', -3, 3).step(0.1);
+    var rotz = this.gui.add(this.guiControls, "RotZ", -4, 4).step(0.1);
     rotz.onChange(function(value) {
-        _this.onRotChanged(Z_AXIS, value);
+        _this.onBoneRotChanged(Z_AXIS, value);
     });
-    gui.add(this.guiControls, 'ScaleFactor', 0.01, 0.5).step(0.01);
 
-    gui.add(this.guiControls, 'Rotate');
+    this.gui.add(this.guiControls, 'ScaleFactor', 0.01, 0.5).step(0.01);
+    
+};
+
+Motivate.prototype.onBonePosChanged = function(axis, value) {
+    var boneFound = false;
+    var boneName = this.guiControls.Bones || "MASTER";
+    var bones = this.skinnedMesh.skeleton.bones;
+    for(var i=0; i<bones.length; ++i) {
+        if(boneName === bones[i].name) {
+            boneFound = true;
+            break;
+        }
+    }
+
+    if(!boneFound) return;
+
+    switch(axis) {
+        case X_AXIS:
+            bones[i].position.x = value;
+            break;
+
+        case Y_AXIS:
+            bones[i].position.y = value;
+            break;
+
+        case Z_AXIS:
+            bones[i].position.z = value;
+            break;
+
+        default:
+            break;
+    }
+};
+
+Motivate.prototype.onBoneRotChanged = function(axis, value) {
+    var boneFound = false;
+    var boneName = this.guiControls.Bones || "MASTER";
+    var bones = this.skinnedMesh.skeleton.bones;
+    for(var i=0; i<bones.length; ++i) {
+        if(boneName === bones[i].name) {
+            boneFound = true;
+            break;
+        }
+    }
+
+    if(!boneFound) return;
+
+    switch(axis) {
+        case X_AXIS:
+            bones[i].rotation.x = value;
+            break;
+
+        case Y_AXIS:
+            bones[i].rotation.y = value;
+            break;
+
+        case Z_AXIS:
+            bones[i].rotation.z = value;
+            break;
+
+        default:
+            break;
+    }
 };
 
 Motivate.prototype.onRotChanged = function(axis, value) {
@@ -100,9 +186,6 @@ Motivate.prototype.update = function() {
     //Perform any updates
 
     var delta = this.clock.getDelta();
-    if(this.mixer) {
-        this.mixer.update(delta);
-    }
 
     BaseApp.prototype.update.call(this);
 };
