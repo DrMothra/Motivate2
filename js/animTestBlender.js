@@ -26,7 +26,7 @@ Motivate.prototype.createScene = function() {
     this.camera.position.set(0, 0, 5 );
     var _this = this;
 
-    this.loader.load( './models/deformTube.json', function ( geometry, materials ) {
+    this.loader.load( './models/Head_BaseMeshRigged.json', function ( geometry, materials ) {
 
         for ( var k in materials ) {
 
@@ -64,20 +64,21 @@ Motivate.prototype.createGUI = function() {
         this.ScaleFactor = 0.25;
     };
 
+    var stepSize = 0.01;
     //Create GUI
     this.gui = new dat.GUI();
 
-    var posx = this.gui.add(this.guiControls, "PosX", -10, 10).step(0.1);
+    var posx = this.gui.add(this.guiControls, "PosX", -10, 10).step(stepSize);
     posx.onChange(function(value) {
         _this.onBonePosChanged(X_AXIS, value);
     });
 
-    var posy = this.gui.add(this.guiControls, "PosY", -10, 10).step(0.1);
+    var posy = this.gui.add(this.guiControls, "PosY", -10, 10).step(stepSize);
     posy.onChange(function(value) {
         _this.onBonePosChanged(Y_AXIS, value);
     });
 
-    var posz = this.gui.add(this.guiControls, "PosZ", -10, 10).step(0.1);
+    var posz = this.gui.add(this.guiControls, "PosZ", -10, 10).step(stepSize);
     posz.onChange(function(value) {
         _this.onBonePosChanged(Z_AXIS, value);
     });
