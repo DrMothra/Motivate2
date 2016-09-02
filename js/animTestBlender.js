@@ -26,11 +26,11 @@ Motivate.prototype.createScene = function() {
     this.camera.position.set(0, 0, 5 );
     var _this = this;
 
-    this.loader.load( './models/Head_BaseMeshRigged.json', function ( geometry, materials ) {
+    this.loader.load( './models/male_Headv3.json', function ( geometry, materials ) {
 
         for ( var k in materials ) {
 
-            materials[k].skinning = true;
+            //materials[k].skinning = true;
 
         }
 
