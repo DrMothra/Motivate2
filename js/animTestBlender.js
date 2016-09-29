@@ -23,7 +23,7 @@ Motivate.prototype.createScene = function() {
 
     this.loader = new THREE.JSONLoader();
 
-    this.camera.position.set(0, 0, 10 );
+    this.camera.position.set(0, 0, 5 );
     var _this = this;
 
     this.loader.load( './models/facePlaneLeigh.json', function ( geometry, materials ) {
@@ -31,7 +31,7 @@ Motivate.prototype.createScene = function() {
         /*
         for ( var k in materials ) {
 
-            materials[k].skinning = true;
+            //materials[k].skinning = true;
 
         }
 
@@ -50,10 +50,8 @@ Motivate.prototype.createScene = function() {
         */
         _this.skinnedMesh = new THREE.Mesh(geometry, new THREE.MultiMaterial(materials));
         _this.skinnedMesh.scale.set( 1, 1, 1 );
-        _this.skinnedMesh.rotation.y  = -Math.PI/2;
+        _this.skinnedMesh.rotation.y = -Math.PI/2;
         _this.scene.add(_this.skinnedMesh);
-
-        console.log("Model loaded");
     });
 
 };
