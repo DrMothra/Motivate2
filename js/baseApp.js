@@ -29,7 +29,8 @@ BaseApp.prototype.init = function(container) {
     this.createCamera();
     this.createControls();
     this.stats = initStats();
-    this.statsShowing = true;
+    this.statsShowing = false;
+    $("#Stats-output").hide();
 };
 
 BaseApp.prototype.createRenderer = function() {

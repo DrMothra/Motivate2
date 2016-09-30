@@ -69,14 +69,20 @@ Motivate.prototype.createScene = function() {
 
     var _this = this;
 
-    this.camera.position.set(0, 0, 100 );
+    this.camera.position.set(0, 0, 400 );
 
-    texture = textureLoader.load( "images/zoltan.jpg" );
+    this.currentFace = 0;
+    this.faceTextures = [];
+    this.faceTextures.push(textureLoader.load( "images/participant1.jpg" ));
+    this.faceTextures.push(textureLoader.load( "images/participant4.jpg" ));
+    this.faceTextures.push(textureLoader.load( "images/participant6.jpg" ));
+
     planeGeom = new THREE.PlaneBufferGeometry(70, 70);
-    mat = new THREE.MeshLambertMaterial({ map: texture});
+    mat = new THREE.MeshLambertMaterial({ map: this.faceTextures[this.currentFace]});
     this.planeMesh = new THREE.Mesh(planeGeom, mat);
-    this.planeMesh.scale.set(1.3, 1.5, 1);
-    this.planeMesh.position.set(90, 50, 40);
+    this.planeMesh.scale.set(1, 1.5, 1);
+    this.planeMesh.position.set(80, 50, 40);
+
     this.scene.add(this.planeMesh);
 
     /*
@@ -103,8 +109,9 @@ Motivate.prototype.createGUI = function() {
         this.RotX = 0;
         this.RotY = 0;
         this.RotZ = 0;
-        this.Rotate = true;
         this.ScaleFactor = 0.25;
+        this.Rotate = true;
+        this.Participant = [];
     };
 
     //Create GUI
@@ -158,6 +165,13 @@ Motivate.prototype.createGUI = function() {
     gui.add(this.guiControls, 'ScaleFactor', 0.01, 0.5).step(0.01);
 
     gui.add(this.guiControls, 'Rotate');
+
+    this.participants = ['Particpant1', 'Particpant4', 'Particpant6'];
+
+    var faces = gui.add(this.guiControls, 'Participant', this.participants);
+    faces.onChange(function(value) {
+        _this.onTextureChanged(value);
+    });
 };
 
 Motivate.prototype.onRotChanged = function(axis, value) {
@@ -217,6 +231,17 @@ Motivate.prototype.onPosChanged = function(axis, value) {
     }
 };
 
+Motivate.prototype.onTextureChanged = function(value) {
+    var i;
+
+    for(i=0; i<this.faceTextures.length; ++i) {
+        if(value === this.participants[i]) break;
+    }
+
+    this.planeMesh.material.map = this.faceTextures[i];
+    this.planeMesh.material.map.needsUpdate = true;
+};
+
 Motivate.prototype.update = function() {
     //Perform any updates
     var delta = this.clock.getDelta();
@@ -234,7 +259,8 @@ Motivate.prototype.update = function() {
 
 Motivate.prototype.renderFrame = function() {
     if(this.currentFrame >= this.numFrames) {
-        this.currentFrame = 1;
+        this.reset();
+        return;
     }
 
     $('#frame').html(this.currentFrame);
@@ -242,16 +268,16 @@ Motivate.prototype.renderFrame = function() {
 
     //Get vector aligned to face
     //Vector between points 0 and 16
-    point = 0;
+    point = 39 * 3;
     frameData = this.frames[this.currentFrame];
     previousFrameData = this.frames[this.currentFrame-1];
     if(this.currentFrame === 25) {
         var test = 0;
     }
-    this.startVector.set(frameData[point], -frameData[point+1], -frameData[point+2]);
-    point = 16*3;
-    this.endVector.set(frameData[point], -frameData[point+1], -frameData[point+2]);
-    this.endVector.sub(this.startVector);
+    this.startVector.set(frameData[point], frameData[point+1], frameData[point+2]);
+    point = 42 * 3;
+    this.endVector.set(frameData[point] - this.startVector.x, this.startVector.y - frameData[point+1], this.startVector.z - frameData[point+2]);
+    //this.endVector.sub(this.startVector);
     this.planeMesh.quaternion.setFromUnitVectors(this.refVector, this.endVector.normalize());
     point = 29 * 3;
     this.diffVector.set(frameData[point]-previousFrameData[point], -(frameData[point+1]-previousFrameData[point+1]), 0);
@@ -271,6 +297,13 @@ Motivate.prototype.stepToNextFrame = function() {
     if(this.playing) return;
 
     this.renderFrame();
+};
+Motivate.prototype.reset = function() {
+    this.playing = false;
+    $('#play').html('Play');
+    this.currentFrame = 1;
+    this.planeMesh.position.set(80, 50, 40);
+    this.elapsedTime = 0;
 };
 
 $(document).ready(function() {
