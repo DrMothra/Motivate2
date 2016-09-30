@@ -2,7 +2,7 @@
  * Created by atg on 18/07/2016.
  */
 
-var FRAMES_PER_SECOND = 30;
+var FRAMES_PER_SECOND = 25;
 var INC = 1;
 var X_AXIS=0, Y_AXIS=1, Z_AXIS=2;
 
@@ -20,6 +20,8 @@ Motivate.prototype.init = function(container) {
 Motivate.prototype.createScene = function() {
     //Create scene
     BaseApp.prototype.createScene.call(this);
+
+    var textureLoader = new THREE.TextureLoader();
 
     //Load plane to play video
     var video = document.getElementById("videoPlayer");
@@ -39,7 +41,7 @@ Motivate.prototype.createScene = function() {
     this.pointTwo = new THREE.Vector3();
 
     //Sort data
-    var numFrames = 331, numPoints = 66, numDims = 3, point=0;
+    var numFrames = 555, numPoints = 66, numDims = 3, point=0;
     this.numFrames = numFrames;
     this.frames = [];
     this.rawFrames = [];
@@ -55,103 +57,52 @@ Motivate.prototype.createScene = function() {
         }
     }
 
-    //Raw data
-    for(frame=0; frame<numFrames; ++frame) {
-        this.rawFrames[frame] = [];
-
-        for (i = 0; i < numPoints; ++i) {
-            for (j = 0; j < 3; ++j) {
-                this.rawFrames[frame][(i * numDims) + j] = rawData[j + (frameOffset * i) + (frame * numDims)];
-            }
-        }
-    }
-
-    //Bone update positions
-    this.startOrigin = new THREE.Vector3();
-    this.currentOrigin = new THREE.Vector3();
-    this.rawOrigin = new THREE.Vector3();
-    this.deltaOrigin = new THREE.Vector3();
-    this.deltaPos = new THREE.Vector3();
-    this.deltaVector = new THREE.Vector3();
-    this.refXVector = new THREE.Vector3(0, 1, 0);
-    this.refYVector = new THREE.Vector3(0, 0, -1);
+    //Orientation vector
+    this.startVector = new THREE.Vector3();
+    this.endVector = new THREE.Vector3();
+    this.refVector = new THREE.Vector3(1, 0, 0);
+    this.diffVector = new THREE.Vector3();
 
     var frameData = this.frames[0];
-    this.startPos = [];
     this.currentFrame = 1;
-    this.neckOffset = 20;
     this.loader = new THREE.JSONLoader();
-
-    this.calcOrigin(0);
-    this.startOrigin.copy(this.currentOrigin);
 
     var _this = this;
 
     this.camera.position.set(0, 0, 100 );
 
-    this.skinnedMesh = undefined;
+    texture = textureLoader.load( "images/zoltan.jpg" );
+    planeGeom = new THREE.PlaneBufferGeometry(70, 70);
+    mat = new THREE.MeshLambertMaterial({ map: texture});
+    this.planeMesh = new THREE.Mesh(planeGeom, mat);
+    this.planeMesh.scale.set(1.3, 1.5, 1);
+    this.planeMesh.position.set(90, 50, 40);
+    this.scene.add(this.planeMesh);
+
+    /*
     this.loader.load( './models/facePlaneLeigh.json', function ( geometry, materials ) {
 
-        /*
-        for ( var k in materials ) {
-
-            materials[k].skinning = true;
-
-        }
-
-        //DEBUG - Neck position
-        var sphereGeom = new THREE.SphereBufferGeometry(3, 16, 16);
-        var sphereMat = new THREE.MeshLambertMaterial( {color: 0x00ff00});
-        var sphere = new THREE.Mesh(sphereGeom, sphereMat);
-        //_this.scene.add(sphere);
-
-        _this.skinnedMesh = new THREE.SkinnedMesh(geometry, new THREE.MultiMaterial(materials));
-        _this.skinnedMesh.scale.set( 1, 1, 1 );
-        _this.skinnedMesh.rotation.x = -Math.PI/2;
-        _this.skinnedMesh.position.y = _this.neckOffset;
-        _this.faceGroup.add(_this.skinnedMesh);
-
-        // Note: We test the corresponding code path with this example -
-        // you shouldn't include the next line into your own code:
-        //skinnedMesh.skeleton.useVertexTexture = false;
-
-        //_this.scene.add( _this.skinnedMesh );
-        _this.animating = true;
-
-        _this.mixer = new THREE.AnimationMixer( skinnedMesh );
-        _this.mixer.clipAction( skinnedMesh.geometry.animations[ 0 ] ).play();
-
-
-        var frameData = _this.frames[0];
-        _this.startBonePos = [];
-        var boneNumber;
-        var bonePos = new THREE.Vector3();
-        for(i=0; i<_this.facialFeatures.length; ++i) {
-            boneNumber = _this.facialFeatures[i].boneNum;
-            bonePos = _this.skinnedMesh.skeleton.bones[boneNumber].position;
-            _this.startBonePos.push(new THREE.Vector3(bonePos.x, bonePos.y, bonePos.z));
-        }
-        //DEBUG
-        //_this.skinnedMesh.visible = false;
-        console.log("Skinned = ", _this.skinnedMesh);
-        */
-        _this.skinnedMesh = new THREE.Mesh(geometry, new THREE.MultiMaterial(materials));
-        _this.skinnedMesh.scale.set( 1, _this.guiControls.ScaleY, _this.guiControls.ScaleZ );
-        _this.skinnedMesh.position.set(_this.guiControls.PosX, _this.guiControls.PosY, _this.guiControls.PosZ);
-        _this.skinnedMesh.rotation.y = -Math.PI/2;
-        _this.scene.add(_this.skinnedMesh);
+        _this.planeMesh = new THREE.Mesh(geometry, new THREE.MultiMaterial(materials));
+        _this.planeMesh.scale.set( 40, 40, 1 );
+        _this.planeMesh.position.set(0, 0, 0);
+        //_this.skinnedMesh.rotation.x = Math.PI/2;
+        _this.scene.add(_this.planeMesh);
     });
+    */
 };
 
 Motivate.prototype.createGUI = function() {
     var _this = this;
     this.guiControls = new function() {
         this.ScaleX = 1.0;
-        this.ScaleY = 80.0;
-        this.ScaleZ = 39.0;
-        this.PosX = 13;
-        this.PosY = 39;
-        this.PosZ = 9;
+        this.ScaleY = 1.0;
+        this.ScaleZ = 1.0;
+        this.PosX = 0;
+        this.PosY = 0;
+        this.PosZ = 0;
+        this.RotX = 0;
+        this.RotY = 0;
+        this.RotZ = 0;
         this.Rotate = true;
         this.ScaleFactor = 0.25;
     };
@@ -159,34 +110,49 @@ Motivate.prototype.createGUI = function() {
     //Create GUI
     var gui = new dat.GUI();
 
-    var scaleX = gui.add(this.guiControls, 'ScaleX', 0.1, 100).step(0.25);
+    var scaleX = gui.add(this.guiControls, 'ScaleX', 0.7, 5).step(0.25);
     scaleX.onChange(function(value) {
         _this.onScaleChanged(X_AXIS, value);
     });
 
-    var scaleY = gui.add(this.guiControls, 'ScaleY', 0.1, 100).step(0.25);
+    var scaleY = gui.add(this.guiControls, 'ScaleY', 0.7, 5).step(0.25);
     scaleY.onChange(function(value) {
         _this.onScaleChanged(Y_AXIS, value);
     });
 
-    var scaleZ = gui.add(this.guiControls, 'ScaleZ', 0.1, 100).step(0.25);
+    var scaleZ = gui.add(this.guiControls, 'ScaleZ', 0.7, 5).step(0.25);
     scaleZ.onChange(function(value) {
         _this.onScaleChanged(Z_AXIS, value);
     });
 
-    var posX = gui.add(this.guiControls, 'PosX', -100, 100).step(0.25);
+    var posX = gui.add(this.guiControls, 'PosX', 0, 200).step(10);
     posX.onChange(function(value) {
         _this.onPosChanged(X_AXIS, value);
     });
 
-    var posY = gui.add(this.guiControls, 'PosY', -100, 100).step(0.25);
+    var posY = gui.add(this.guiControls, 'PosY', 0, 200).step(10);
     posY.onChange(function(value) {
         _this.onPosChanged(Y_AXIS, value);
     });
 
-    var posZ = gui.add(this.guiControls, 'PosZ', -100, 100).step(0.25);
+    var posZ = gui.add(this.guiControls, 'PosZ', 0, 200).step(10);
     posZ.onChange(function(value) {
         _this.onPosChanged(Z_AXIS, value);
+    });
+
+    var rotx = gui.add(this.guiControls, 'RotX', -3, 3).step(0.25);
+    rotx.onChange(function(value) {
+        _this.onRotChanged(X_AXIS, value);
+    });
+
+    var roty = gui.add(this.guiControls, 'RotY', -3, 3).step(0.25);
+    roty.onChange(function(value) {
+        _this.onRotChanged(Y_AXIS, value);
+    });
+
+    var rotz = gui.add(this.guiControls, 'RotZ', -3, 3).step(0.25);
+    rotz.onChange(function(value) {
+        _this.onRotChanged(Z_AXIS, value);
     });
 
     gui.add(this.guiControls, 'ScaleFactor', 0.01, 0.5).step(0.01);
@@ -197,15 +163,15 @@ Motivate.prototype.createGUI = function() {
 Motivate.prototype.onRotChanged = function(axis, value) {
     switch(axis) {
         case X_AXIS:
-            this.skinnedMesh.rotation.x = value;
+            this.planeMesh.rotation.x = value;
             break;
 
         case Y_AXIS:
-            this.skinnedMesh.rotation.y = value;
+            this.planeMesh.rotation.y = value;
             break;
 
         case Z_AXIS:
-            this.skinnedMesh.rotation.z = value;
+            this.planeMesh.rotation.z = value;
             break;
 
         default:
@@ -216,15 +182,15 @@ Motivate.prototype.onRotChanged = function(axis, value) {
 Motivate.prototype.onScaleChanged = function(axis, value) {
     switch(axis) {
         case X_AXIS:
-            this.skinnedMesh.scale.x = value;
+            this.planeMesh.scale.x = value;
             break;
 
         case Y_AXIS:
-            this.skinnedMesh.scale.y = value;
+            this.planeMesh.scale.y = value;
             break;
 
         case Z_AXIS:
-            this.skinnedMesh.scale.z = value;
+            this.planeMesh.scale.z = value;
             break;
 
         default:
@@ -235,15 +201,15 @@ Motivate.prototype.onScaleChanged = function(axis, value) {
 Motivate.prototype.onPosChanged = function(axis, value) {
     switch(axis) {
         case X_AXIS:
-            this.skinnedMesh.position.x = value;
+            this.planeMesh.position.x = value;
             break;
 
         case Y_AXIS:
-            this.skinnedMesh.position.y = value;
+            this.planeMesh.position.y = value;
             break;
 
         case Z_AXIS:
-            this.skinnedMesh.position.z = value;
+            this.planeMesh.position.z = value;
             break;
 
         default:
@@ -272,76 +238,26 @@ Motivate.prototype.renderFrame = function() {
     }
 
     $('#frame').html(this.currentFrame);
-    var point, i, boneNumber, test, xRotation, yRotation, zRotation;
-    var current, previous;
-    var frameData = this.frames[this.currentFrame];
-    var rawData = this.rawFrames[this.currentFrame];
-    var previousFrameData = this.frames[this.currentFrame-1];
+    var point, frameData, previousFrameData;
 
-    //Get origin
-    this.calcOrigin(this.currentFrame);
-    this.deltaOrigin.subVectors(this.currentOrigin, this.startOrigin);
-
-    //Rotations
-    this.calcRawOrigin(this.currentFrame);
-    //Vector from bridge of nose
-    point = 28 * 3;
-    //DEBUG
-    //console.log("Raw origin = ", this.rawOrigin);
-
-    this.deltaVector.x = rawData[point] - this.rawOrigin.x;
-    this.deltaVector.y = rawData[point+1] - this.rawOrigin.y;
-    this.deltaVector.z = rawData[point+2] - this.rawOrigin.z;
-
-    //console.log("Delta = ", this.deltaVector);
-
-    //x-axis rotation
-    xRotation = this.refXVector.angleTo(this.deltaVector);
-
-    //y-axis rotation
+    //Get vector aligned to face
+    //Vector between points 0 and 16
     point = 0;
-    this.deltaVector.x = rawData[point] - this.rawOrigin.x;
-    this.deltaVector.y = rawData[point+1] - this.rawOrigin.y;
-    this.deltaVector.z = rawData[point+2] - this.rawOrigin.z;
-
-    yRotation = this.refYVector.angleTo(this.deltaVector);
-
-    //z-axis rotation
-    zRotation = this.refXVector.angleTo(this.deltaVector);
-
-    if(this.guiControls.Rotate) {
-        this.skinnedMesh.rotation.x = xRotation;
-        this.skinnedMesh.rotation.y = yRotation;
-        this.skinnedMesh.rotation.z = zRotation;
+    frameData = this.frames[this.currentFrame];
+    previousFrameData = this.frames[this.currentFrame-1];
+    if(this.currentFrame === 25) {
+        var test = 0;
     }
+    this.startVector.set(frameData[point], -frameData[point+1], -frameData[point+2]);
+    point = 16*3;
+    this.endVector.set(frameData[point], -frameData[point+1], -frameData[point+2]);
+    this.endVector.sub(this.startVector);
+    this.planeMesh.quaternion.setFromUnitVectors(this.refVector, this.endVector.normalize());
+    point = 29 * 3;
+    this.diffVector.set(frameData[point]-previousFrameData[point], -(frameData[point+1]-previousFrameData[point+1]), 0);
+    this.planeMesh.position.add(this.diffVector.multiplyScalar(this.guiControls.ScaleFactor));
 
     ++this.currentFrame;
-};
-
-Motivate.prototype.calcOrigin = function(frame) {
-    //Origin is point between ears - points 16 and 0
-    var point = 16 * 3;
-    var frameData = this.frames[frame];
-    this.currentOrigin.x = frameData[point] - frameData[0];
-    this.currentOrigin.y = frameData[point+1] - frameData[1];
-    this.currentOrigin.z = frameData[point+2] - frameData[2];
-    this.currentOrigin.multiplyScalar(0.5);
-    this.currentOrigin.x += frameData[0];
-    this.currentOrigin.y += frameData[1];
-    this.currentOrigin.z += frameData[2];
-};
-
-Motivate.prototype.calcRawOrigin = function(frame) {
-    //Origin is point between ears - points 16 and 0
-    var point = 16 * 3;
-    var rawData = this.rawFrames[frame];
-    this.rawOrigin.x = rawData[point] - rawData[0];
-    this.rawOrigin.y = rawData[point+1] - rawData[1];
-    this.rawOrigin.z = rawData[point+2] - rawData[2];
-    this.rawOrigin.multiplyScalar(0.5);
-    this.rawOrigin.x += rawData[0];
-    this.rawOrigin.y += rawData[1];
-    this.rawOrigin.z += rawData[2];
 };
 
 Motivate.prototype.toggleFrames = function() {

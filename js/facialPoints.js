@@ -39,7 +39,7 @@ Motivate.prototype.createScene = function() {
     this.currentPoint = new THREE.Vector3();
 
     //Sort data
-    var numFrames = 331, numPoints = 66, numDims = 3, point=0;
+    var numFrames = 555, numPoints = 66, numDims = 3, point=0;
     this.numFrames = numFrames;
     this.frames = [];
     var frame, i;
