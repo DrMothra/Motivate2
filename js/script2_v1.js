@@ -41,7 +41,7 @@ Motivate.prototype.createScene = function() {
     this.pointTwo = new THREE.Vector3();
 
     //Sort data
-    var numFrames = 807, validFrames = 750, numPoints = 66, numDims = 3, point=0;
+    var numFrames = 814, validFrames = 750, numPoints = 66, numDims = 3, point=0;
     this.offsetFrame = numFrames - validFrames;
     this.numFrames = numFrames;
     this.frames = [];
@@ -84,8 +84,8 @@ Motivate.prototype.createScene = function() {
     planeGeom = new THREE.PlaneBufferGeometry(70, 70);
     mat = new THREE.MeshLambertMaterial({ map: this.faceTextures[this.currentFace]});
     this.planeMesh = new THREE.Mesh(planeGeom, mat);
-    this.planePosition = new THREE.Vector3(110, 0, 40);
-    this.planeMesh.scale.set(1, 1.5, 1);
+    this.planePosition = new THREE.Vector3(100, 20, 40);
+    this.planeMesh.scale.set(1, 1.3, 1);
     this.planeMesh.position.copy(this.planePosition);
 
     this.scene.add(this.planeMesh);
@@ -308,7 +308,7 @@ Motivate.prototype.reset = function() {
     $('#play').html('Play');
     this.currentFrame = 1;
     this.currentValidFrame = 1;
-    this.planeMesh.position.set(80, 50, 40);
+    this.planeMesh.position.set(100, 20, 40);
     this.elapsedTime = 0;
 };
 
