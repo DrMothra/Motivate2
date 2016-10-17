@@ -24,6 +24,9 @@ Motivate.prototype.createScene = function() {
 
     this.playing = false;
 
+    //Set camera
+    this.camera.position.set(0, 0, 75);
+
     //Delta vectors
     this.deltaVector = new THREE.Vector3();
     this.deltaPos = new THREE.Vector3();
@@ -39,7 +42,7 @@ Motivate.prototype.createScene = function() {
     this.currentPoint = new THREE.Vector3();
 
     //Sort data
-    var numFrames = 503, numPoints = 66, numDims = 3, point=0;
+    var numFrames = 331, numPoints = 66, numDims = 3, point=0;
     this.numFrames = numFrames;
     this.frames = [];
     var frame, i;
@@ -115,7 +118,6 @@ Motivate.prototype.createGUI = function() {
     var _this = this;
     this.guiControls = new function() {
         this.Point = 51;
-        this.Lines = false;
         this.FPS = 30;
     };
 
@@ -123,7 +125,6 @@ Motivate.prototype.createGUI = function() {
     var gui = new dat.GUI();
 
     gui.add(this.guiControls, 'Point', 0, 65).step(1);
-    gui.add(this.guiControls, 'Lines');
     gui.add(this.guiControls, 'FPS', 1, 50).step(1);
 };
 
@@ -136,11 +137,8 @@ Motivate.prototype.renderFrame = function() {
     var current, previous;
 
     if(this.currentFrame >= this.numFrames) {
-        this.calcOrigin(0);
-        this.previousOrigin.copy(this.originVector);
-        this.currentFrame = 1;
-        var videoElem = document.getElementById("videoPlayer");
-        videoElem.play();
+        this.reset();
+        return;
     }
 
     var frameData = this.frames[this.currentFrame];
@@ -177,44 +175,6 @@ Motivate.prototype.renderFrame = function() {
 
     this.previousOrigin.copy(this.originVector);
     ++this.currentFrame;
-
-    if(this.guiControls.Lines) {
-        this.lineGeoms[0].vertices[0].x = frameData[0];
-        this.lineGeoms[0].vertices[0].y = frameData[1];
-        this.lineGeoms[0].vertices[0].z = frameData[2];
-        linePoint = 16*3;
-        this.lineGeoms[0].vertices[1].x = frameData[linePoint];
-        this.lineGeoms[0].vertices[1].y = frameData[linePoint+1];
-        this.lineGeoms[0].vertices[1].z = frameData[linePoint+2];
-        this.lineGeoms[0].verticesNeedUpdate = true;
-
-        this.deltaVector.x = frameData[linePoint] - frameData[0];
-        this.deltaVector.y = frameData[linePoint+1] - frameData[1];
-        this.deltaVector.z = frameData[linePoint+2] - frameData[2];
-        this.deltaVector.multiplyScalar(0.5);
-        this.deltaVector.x += frameData[0];
-        this.deltaVector.y += frameData[1];
-        this.deltaVector.z += frameData[2];
-
-        linePoint = 28*3;
-        this.lineGeoms[1].vertices[0].x = frameData[linePoint];
-        this.lineGeoms[1].vertices[0].y = frameData[linePoint+1];
-        this.lineGeoms[1].vertices[0].z = frameData[linePoint+2];
-
-        this.lineGeoms[1].vertices[1].x = this.deltaVector.x;
-        this.lineGeoms[1].vertices[1].y = this.deltaVector.y;
-        this.lineGeoms[1].vertices[1].z = this.deltaVector.z;
-        this.lineGeoms[1].verticesNeedUpdate = true;
-
-        this.lineGeoms[2].vertices[0].x = this.deltaVector.x;
-        this.lineGeoms[2].vertices[0].y = this.deltaVector.y;
-        this.lineGeoms[2].vertices[0].z = this.deltaVector.z;
-
-        this.lineGeoms[2].vertices[1].x = this.deltaVector.x;
-        this.lineGeoms[2].vertices[1].y = this.deltaVector.y + 300;
-        this.lineGeoms[2].vertices[1].z = this.deltaVector.z;
-        this.lineGeoms[2].verticesNeedUpdate = true;
-    }
 
     //Eye lines
     for(i=0, eyePoint=36*3; i<EYE_POINTS; ++i) {
@@ -282,6 +242,17 @@ Motivate.prototype.update = function() {
     }
 
     BaseApp.prototype.update.call(this);
+};
+
+Motivate.prototype.reset = function() {
+    this.calcOrigin(0);
+    this.previousOrigin.copy(this.originVector);
+    this.currentFrame = 1;
+    var videoElem = document.getElementById("videoPlayer");
+    videoElem.pause();
+    videoElem.currentTime = 0;
+    this.playing = false;
+    $('#play').html('Play');
 };
 
 $(document).ready(function() {
