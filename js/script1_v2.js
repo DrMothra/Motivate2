@@ -79,12 +79,15 @@ Motivate.prototype.createScene = function() {
     this.faceTextures = [];
     this.faceTextures.push(textureLoader.load( "images/participant1.png" ));
     this.faceTextures.push(textureLoader.load( "images/participant4.png" ));
+    this.faceTextures.push(textureLoader.load( "images/participant5.png" ));
     this.faceTextures.push(textureLoader.load( "images/participant6.png" ));
+    this.faceTextures.push(textureLoader.load( "images/participant7.png" ));
+    this.faceTextures.push(textureLoader.load( "images/participant8.png" ));
 
     planeGeom = new THREE.PlaneBufferGeometry(70, 70);
     mat = new THREE.MeshLambertMaterial({ transparent: true, map: this.faceTextures[this.currentFace]});
     this.planeMesh = new THREE.Mesh(planeGeom, mat);
-    this.planePosition = new THREE.Vector3(100, 25, 40);
+    this.planePosition = new THREE.Vector3(90, 25, 40);
     this.planeMesh.scale.set(1, 1.3, 1);
     this.planeMesh.position.copy(this.planePosition);
 
@@ -171,7 +174,7 @@ Motivate.prototype.createGUI = function() {
 
     gui.add(this.guiControls, 'Rotate');
 
-    this.participants = ['Particpant1', 'Particpant4', 'Particpant6'];
+    this.participants = ['Particpant1', 'Particpant4', 'Particpant5', 'Particpant6', 'Particpant7', 'Particpant8'];
 
     var faces = gui.add(this.guiControls, 'Participant', this.participants);
     faces.onChange(function(value) {
@@ -308,7 +311,7 @@ Motivate.prototype.reset = function() {
     $('#play').html('Play');
     this.currentFrame = 1;
     this.currentValidFrame = 1;
-    this.planeMesh.position.set(100, 25, 40);
+    this.planeMesh.position.set(90, 25, 40);
     this.elapsedTime = 0;
 };
 
